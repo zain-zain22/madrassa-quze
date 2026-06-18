@@ -1,0 +1,22 @@
+{
+  "version": 1781770947004,
+  "quizInfo": {
+    "class": "",
+    "subject": "",
+    "part": "",
+    "chapter": "",
+    "lessonName": ""
+  },
+  "questions": [
+    {
+      "qText": "ആദ്യ മനുഷ്യൻ ആരാണ്",
+      "correctText": "ആദം",
+      "wrong1Text": "മുഹമ്മദ്‌",
+      "wrong2Text": "ഇസാ",
+      "qSrc": "data/quiz_1781770938791_q0_q.mp4",
+      "correctSrc": "data/quiz_1781770940926_q0_correct.mp4",
+      "wrong1Src": "data/quiz_1781770943005_q0_wrong1.mp4",
+      "wrong2Src": "data/quiz_1781770945012_q0_wrong2.mp4"
+    }
+  ]
+}
