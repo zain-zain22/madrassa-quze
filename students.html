@@ -1,0 +1,282 @@
+<!DOCTYPE html> 
+<html lang="ml"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+<title>സൗണ്ട് ബുക്ക് - ക്വിസ് സ്റ്റുഡന്റ് പാനൽ</title> 
+<style> 
+* { box-sizing: border-box; } 
+body { font-family: 'Segoe UI', sans-serif; padding: 10px; background: #eef2f3; text-align: center; margin: 0; } 
+.panel-box { background: white; max-width: 500px; margin: 10px auto; padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; } 
+h2, h3, h4 { text-align: center; color: #2c3e50; margin-top: 5px; } 
+.section { background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; } 
+select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; } 
+button { color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; margin: 5px 0; font-weight: bold; width: 100%; font-size: 15px; display: block; } 
+.btn-blue { background: #3498db; } 
+.btn-green { background: #2ecc71; } 
+.btn-speaker { background: #9b59b6; margin-bottom: 15px; font-size: 16px; } 
+.option-btn { background: #f1f2f6; color: #333; text-align: left; padding: 15px; border: 2px solid #ced6e0; margin-bottom: 10px; transition: all 0.2s; } 
+.option-btn:active { background: #dfe4ea; } 
+.correct { background: #2ecc71 !important; color: white !important; border-color: #27ae60 !important; } 
+.wrong { background: #e74c3c !important; color: white !important; border-color: #c0392b !important; } 
+.loading-overlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; z-index: 9999; flex-direction: column; } 
+.badge { background: #e67e22; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; } 
+.info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; } 
+.info-table td { padding: 6px; border: 1px solid #ffe0b2; background: #fff8e1; color: #2c3e50; } 
+.hidden { display: none !important; } 
+.score-text { font-size: 24px; font-weight: bold; color: #27ae60; text-align: center; margin: 15px 0; } 
+</style> 
+</head> 
+<body> 
+
+<div class="loading-overlay" id="loadingOverlay"> 
+<span id="loadText">📦 ക്വിസ് വിവരങ്ങൾ ശേഖരിക്കുന്നു...</span> 
+</div> 
+
+<div class="panel-box" id="loginPage" style="border-top: 4px solid #3498db;"> 
+<h2>🎓 സ്റ്റുഡന്റ് ലോഗിൻ</h2> 
+<div class="section"> 
+<label>മദ്രസ തിരഞ്ഞെടുക്കുക:</label> 
+<select id="madrasaSelect" onchange="updateStudentDropdown()"></select> 
+
+<label>പേര് തിരഞ്ഞെടുക്കുക:</label> 
+<select id="studentSelect"></select> 
+
+<button class="btn-blue" style="margin-top: 10px;" onclick="startQuiz()">🚀 ക്വിസ് ആരംഭിക്കുക</button> 
+</div> 
+</div> 
+
+<div class="panel-box hidden" id="quizPage" style="border-top: 4px solid #e67e22;"> 
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"> 
+<span style="font-size: 14px; font-weight: bold; color: #7f8c8d;" id="studentBadge">👤 കുട്ടി: </span> 
+<span class="badge" id="qProgress">ചോദ്യം: 1/1</span> 
+</div> 
+
+<table class="info-table"> 
+<tr> 
+<td id="infoClass"><b>ക്ലാസ്:</b> -</td> 
+<td id="infoSubject"><b>വിഷയം:</b> -</td> 
+</tr> 
+<tr> 
+<td id="infoChapter"><b>ചാപ്റ്റർ:</b> -</td> 
+<td id="infoLesson"><b>പാഠം:</b> -</td> 
+</tr> 
+</table> 
+
+<div class="section" style="background: #fff; border-color: #ffe0b2;"> 
+<h3 id="questionTitle" style="color:#d35400; font-size: 18px; margin-bottom: 10px; text-align: left; line-height: 1.4;">ചോദ്യം ലോഡ് ചെയ്യുന്നു...</h3> 
+<button class="btn-speaker" onclick="playAudio('q')">🔊 ചോദ്യം കേൾക്കുക</button> 
+
+<div id="optionsContainer"> 
+</div> 
+</div> 
+
+<button class="btn-green hidden" id="nextBtn" onclick="nextQuestion()">അടുത്ത ചോദ്യം ➡️</button> 
+</div> 
+
+<div class="panel-box hidden" id="resultPage" style="border-top: 4px solid #2ecc71; text-align: center;"> 
+<h2>🎉 ക്വിസ് പൂർത്തിയായി!</h2> 
+<div class="section" style="background: #f0fff4; border-color: #c3f3d7;"> 
+<h4 id="resultStudentName" style="margin: 5px 0;">വിദ്യാർത്ഥി: </h4> 
+<p style="margin: 5px 0; color: #7f8c8d;">താങ്കൾ നേടിയ സ്കോർ</p> 
+<div class="score-text" id="finalScoreText">0 / 0</div> 
+<p id="feedbackText" style="font-weight: bold; color: #34495e;"></p> 
+</div> 
+<button class="btn-blue" onclick="window.location.reload()">🔄 വീണ്ടും കളിക്കുക</button> 
+</div> 
+
+<audio id="globalAudioPlayer"></audio> 
+
+<script> 
+let masterSchoolData = {}; 
+let quizData = {}; 
+let questions = []; 
+let currentQuestionIndex = 0; 
+let score = 0; 
+let optionClicked = false; 
+
+window.onload = function() { 
+loadDataFromServer(); 
+} 
+
+// GitHub പേജുകളിൽ നിന്നും ലോക്കൽ ഫോൾഡറിൽ നിന്നും ഡാറ്റ റീഡ് ചെയ്യുന്നു
+async function loadDataFromServer() { 
+try { 
+let res1 = await fetch('data/master_list.json?t=' + Date.now()); 
+if(res1.ok) masterSchoolData = await res1.json(); 
+
+let res2 = await fetch('data/quiz_data.json?t=' + Date.now()); 
+if(res2.ok) quizData = await res2.json(); 
+
+setupLoginDropdowns(); 
+document.getElementById('loadingOverlay').style.add('display', 'none'); 
+document.getElementById('loadingOverlay').style.display = 'none'; 
+} catch (e) { 
+alert("ഡാറ്റ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല! ഫയലുകൾ കൃത്യമാണെന്ന് ഉറപ്പുവരുത്തുക."); 
+console.error(e); 
+} 
+} 
+
+function setupLoginDropdowns() { 
+const mSelect = document.getElementById('madrasaSelect'); 
+mSelect.innerHTML = '<option value="">-- തിരഞ്ഞെടുക്കുക --</option>'; 
+Object.keys(masterSchoolData).sort().forEach(m => { 
+let opt = document.createElement('option'); 
+opt.value = m; opt.innerText = m; mSelect.appendChild(opt); 
+}); 
+updateStudentDropdown(); 
+} 
+
+function updateStudentDropdown() { 
+const mVal = document.getElementById('madrasaSelect').value; 
+const sSelect = document.getElementById('studentSelect'); 
+sSelect.innerHTML = ''; 
+if(!mVal || !masterSchoolData[mVal]) { 
+sSelect.innerHTML = '<option value="">-- ആദ്യം മദ്രസ തിരഞ്ഞെടുക്കുക --</option>'; 
+return; 
+} 
+masterSchoolData[mVal].sort().forEach(s => { 
+let opt = document.createElement('option'); 
+opt.value = s; opt.innerText = s; sSelect.appendChild(opt); 
+}); 
+} 
+
+function startQuiz() { 
+let madrasa = document.getElementById('madrasaSelect').value; 
+let student = document.getElementById('studentSelect').value; 
+
+if(!madrasa || !student) { 
+return alert("ദയവായി മദ്രസയും പേരും തിരഞ്ഞെടുക്കുക!"); 
+} 
+
+if(!quizData || !quizData.questions || quizData.questions.length === 0) { 
+return alert("ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ഒന്നും ലഭ്യമല്ല!"); 
+} 
+
+questions = quizData.questions; 
+currentQuestionIndex = 0; 
+score = 0; 
+
+// വിദ്യാർത്ഥിയുടെ പേര് അപ്ഡേറ്റ് ചെയ്യുക
+document.getElementById('studentBadge').innerText = `👤 ${student} (${madrasa})`; 
+
+// ഹെഡർ ഇൻഫോ അപ്ഡേറ്റ് ചെയ്യുക
+if(quizData.quizInfo) { 
+document.getElementById('infoClass').innerHTML = `<b>ക്ലാസ്:</b> ${quizData.quizInfo.class || '-'}`; 
+document.getElementById('infoSubject').innerHTML = `<b>വിഷയം:</b> ${quizData.quizInfo.subject || '-'}`; 
+document.getElementById('infoChapter').innerHTML = `<b>ചാപ്റ്റർ:</b> ${quizData.quizInfo.chapter || '-'}`; 
+document.getElementById('infoLesson').innerHTML = `<b>പാഠം:</b> ${quizData.quizInfo.lessonName || '-'}`; 
+} 
+
+document.getElementById('loginPage').classList.add('hidden'); 
+document.getElementById('quizPage').classList.remove('hidden'); 
+
+showQuestion(); 
+} 
+
+function showQuestion() { 
+optionClicked = false; 
+document.getElementById('nextBtn').classList.add('hidden'); 
+document.getElementById('qProgress').innerText = `ചോദ്യം: ${currentQuestionIndex + 1}/${questions.length}`; 
+
+let q = questions[currentQuestionIndex]; 
+document.getElementById('questionTitle').innerText = `${currentQuestionIndex + 1}. ${q.qText}`; 
+
+// ഓട്ടോമാറ്റിക് ചോദ്യത്തിന്റെ ഓഡിയോ പ്ലേ ചെയ്യുന്നു
+playAudio('q'); 
+
+// ഉത്തരങ്ങൾ മിക്സ് ചെയ്ത് ഡിസ്പ്ലേ ചെയ്യുക (Shuffle Options) 
+let options = [ 
+{ text: q.correctText, isCorrect: true, type: 'correct' }, 
+{ text: q.wrong1Text, isCorrect: false, type: 'wrong1' }, 
+{ text: q.wrong2Text, isCorrect: false, type: 'wrong2' } 
+]; 
+
+// ഷഫിൾ എൻജിൻ
+options.sort(() => Math.random() - 0.5); 
+
+const container = document.getElementById('optionsContainer'); 
+container.innerHTML = ''; 
+
+options.forEach(opt => { 
+let btn = document.createElement('button'); 
+btn.className = 'option-btn'; 
+btn.innerHTML = `🎵 ${opt.text}`; 
+btn.onclick = function() { checkAnswer(btn, opt.isCorrect, opt.type); }; 
+container.appendChild(btn); 
+}); 
+} 
+
+function playAudio(type) { 
+let q = questions[currentQuestionIndex]; 
+let player = document.getElementById('globalAudioPlayer'); 
+let src = ""; 
+
+if(type === 'q') src = q.qSrc; 
+else if(type === 'correct') src = q.correctSrc; 
+else if(type === 'wrong1') src = q.wrong1Src; 
+else if(type === 'wrong2') src = q.wrong2Src; 
+
+if(src) { 
+player.src = src; 
+player.play().catch(e => console.log("Audio play blocked by browser preference")); 
+} 
+} 
+
+function checkAnswer(selectedBtn, isCorrect, type) { 
+if(optionClicked) return; // ഒരു തവണ ക്ലിക്ക് ചെയ്താൽ പിന്നീട് മാറ്റാൻ അനുവദിക്കില്ല
+optionClicked = true; 
+
+// ഉത്തരം ക്ലിക്ക് ചെയ്യുമ്പോൾ അതിന്റെ ഓഡിയോ കേൾപ്പിക്കുന്നു
+playAudio(type); 
+
+const allBtns = document.querySelectorAll('.option-btn'); 
+allBtns.forEach(btn => btn.disabled = true); 
+
+if(isCorrect) { 
+selectedBtn.classList.add('correct'); 
+selectedBtn.innerHTML = `✅ ${selectedBtn.innerHTML.replace('🎵 ', '')}`; 
+score++; 
+} else { 
+selectedBtn.classList.add('wrong'); 
+selectedBtn.innerHTML = `❌ ${selectedBtn.innerHTML.replace('🎵 ', '')}`; 
+// ശരിയായ ഉത്തരം ഏതാണെന്ന് കുട്ടിയെ കാണിച്ചുകൊടുക്കുന്നു
+allBtns.forEach(btn => { 
+    if(btn.onclick.toString().includes('true')) { 
+        btn.classList.add('correct'); 
+    } 
+}); 
+} 
+
+document.getElementById('nextBtn').classList.remove('hidden'); 
+} 
+
+function nextQuestion() { 
+currentQuestionIndex++; 
+if(currentQuestionIndex < questions.length) { 
+showQuestion(); 
+} else { 
+showResult(); 
+} 
+} 
+
+function showResult() { 
+document.getElementById('quizPage').classList.add('hidden'); 
+document.getElementById('resultPage').classList.remove('hidden'); 
+
+let student = document.getElementById('studentSelect').value; 
+document.getElementById('resultStudentName').innerText = `വിദ്യാർത്ഥി: ${student}`; 
+document.getElementById('finalScoreText').innerText = `${score} / ${questions.length}`; 
+
+let percentage = (score / questions.length) * 100; 
+let feedback = ""; 
+if(percentage === 100) feedback = "Excellent! 🌟 മുഴുവൻ ഉത്തരങ്ങളും ശരിയാണ്."; 
+else if(percentage >= 70) feedback = "Very Good! 👍 മികച്ച വിജയം."; 
+else if(percentage >= 40) feedback = "Good Job! നന്നായി ശ്രമിച്ചു."; 
+else feedback = "More Practice Needed! 📚 വീണ്ടും ശ്രമിക്കുക."; 
+
+document.getElementById('feedbackText').innerText = feedback; 
+} 
+</script> 
+</body> 
+</html>
