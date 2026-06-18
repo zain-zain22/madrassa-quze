@@ -15,7 +15,7 @@ button { color: white; border: none; padding: 12px; border-radius: 5px; cursor: 
 .btn-blue { background: #3498db; } 
 .btn-green { background: #2ecc71; } 
 .btn-speaker { background: #9b59b6; margin-bottom: 15px; font-size: 16px; } 
-.option-btn { background: #f1f2f6; color: #333; text-align: left; padding: 15px; border: 2px solid #ced6e0; margin-bottom: 10px; transition: all 0.2s; } 
+.option-btn { background: #f1f2f6; color: #333; text-align: left; padding: 15px; border: 2px solid #ced6e0; margin-bottom: 10px; transition: all 0.2s; width: 100%; } 
 .option-btn:active { background: #dfe4ea; } 
 .correct { background: #2ecc71 !important; color: white !important; border-color: #27ae60 !important; } 
 .wrong { background: #e74c3c !important; color: white !important; border-color: #c0392b !important; } 
@@ -88,6 +88,10 @@ button { color: white; border: none; padding: 12px; border-radius: 5px; cursor: 
 <audio id="globalAudioPlayer"></audio> 
 
 <script> 
+// 🎯 പുതിയ റെപ്പോസിറ്ററി കൃത്യമായി ഇവിടെ ലിങ്ക് ചെയ്തിരിക്കുന്നു
+const GH_USER = "zain-zain22"; 
+const GH_REPO = "madrassa-quze"; 
+
 let masterSchoolData = {}; 
 let quizData = {}; 
 let questions = []; 
@@ -99,17 +103,16 @@ window.onload = function() {
 loadDataFromServer(); 
 } 
 
-// GitHub പേജുകളിൽ നിന്നും ലോക്കൽ ഫോൾഡറിൽ നിന്നും ഡാറ്റ റീഡ് ചെയ്യുന്നു
+// GitHub-ൽ നിന്ന് നേരിട്ട് ഫയലുകൾ കൃത്യമായ പാതയിൽ റീഡ് ചെയ്യുന്നു
 async function loadDataFromServer() { 
 try { 
-let res1 = await fetch('data/master_list.json?t=' + Date.now()); 
+let res1 = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/data/master_list.json?t=` + Date.now()); 
 if(res1.ok) masterSchoolData = await res1.json(); 
 
-let res2 = await fetch('data/quiz_data.json?t=' + Date.now()); 
+let res2 = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/data/quiz_data.json?t='` + Date.now()); 
 if(res2.ok) quizData = await res2.json(); 
 
 setupLoginDropdowns(); 
-document.getElementById('loadingOverlay').style.add('display', 'none'); 
 document.getElementById('loadingOverlay').style.display = 'none'; 
 } catch (e) { 
 alert("ഡാറ്റ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല! ഫയലുകൾ കൃത്യമാണെന്ന് ഉറപ്പുവരുത്തുക."); 
@@ -157,10 +160,8 @@ questions = quizData.questions;
 currentQuestionIndex = 0; 
 score = 0; 
 
-// വിദ്യാർത്ഥിയുടെ പേര് അപ്ഡേറ്റ് ചെയ്യുക
 document.getElementById('studentBadge').innerText = `👤 ${student} (${madrasa})`; 
 
-// ഹെഡർ ഇൻഫോ അപ്ഡേറ്റ് ചെയ്യുക
 if(quizData.quizInfo) { 
 document.getElementById('infoClass').innerHTML = `<b>ക്ലാസ്:</b> ${quizData.quizInfo.class || '-'}`; 
 document.getElementById('infoSubject').innerHTML = `<b>വിഷയം:</b> ${quizData.quizInfo.subject || '-'}`; 
@@ -182,17 +183,14 @@ document.getElementById('qProgress').innerText = `ചോദ്യം: ${currentQ
 let q = questions[currentQuestionIndex]; 
 document.getElementById('questionTitle').innerText = `${currentQuestionIndex + 1}. ${q.qText}`; 
 
-// ഓട്ടോമാറ്റിക് ചോദ്യത്തിന്റെ ഓഡിയോ പ്ലേ ചെയ്യുന്നു
 playAudio('q'); 
 
-// ഉത്തരങ്ങൾ മിക്സ് ചെയ്ത് ഡിസ്പ്ലേ ചെയ്യുക (Shuffle Options) 
 let options = [ 
 { text: q.correctText, isCorrect: true, type: 'correct' }, 
 { text: q.wrong1Text, isCorrect: false, type: 'wrong1' }, 
 { text: q.wrong2Text, isCorrect: false, type: 'wrong2' } 
 ]; 
 
-// ഷഫിൾ എൻജിൻ
 options.sort(() => Math.random() - 0.5); 
 
 const container = document.getElementById('optionsContainer'); 
@@ -218,16 +216,17 @@ else if(type === 'wrong1') src = q.wrong1Src;
 else if(type === 'wrong2') src = q.wrong2Src; 
 
 if(src) { 
-player.src = src; 
-player.play().catch(e => console.log("Audio play blocked by browser preference")); 
+// റെപ്പോസിറ്ററിയിൽ കിടക്കുന്ന ഓഡിയോ ഫയലുകളുടെ ശരിയായ ലിങ്ക് നിർമ്മിക്കുന്നു
+let fullAudioUrl = `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/${src}`;
+player.src = fullAudioUrl; 
+player.play().catch(e => console.log("Audio play blocked by browser")); 
 } 
 } 
 
 function checkAnswer(selectedBtn, isCorrect, type) { 
-if(optionClicked) return; // ഒരു തവണ ക്ലിക്ക് ചെയ്താൽ പിന്നീട് മാറ്റാൻ അനുവദിക്കില്ല
+if(optionClicked) return; 
 optionClicked = true; 
 
-// ഉത്തരം ക്ലിക്ക് ചെയ്യുമ്പോൾ അതിന്റെ ഓഡിയോ കേൾപ്പിക്കുന്നു
 playAudio(type); 
 
 const allBtns = document.querySelectorAll('.option-btn'); 
@@ -240,7 +239,6 @@ score++;
 } else { 
 selectedBtn.classList.add('wrong'); 
 selectedBtn.innerHTML = `❌ ${selectedBtn.innerHTML.replace('🎵 ', '')}`; 
-// ശരിയായ ഉത്തരം ഏതാണെന്ന് കുട്ടിയെ കാണിച്ചുകൊടുക്കുന്നു
 allBtns.forEach(btn => { 
     if(btn.onclick.toString().includes('true')) { 
         btn.classList.add('correct'); 
