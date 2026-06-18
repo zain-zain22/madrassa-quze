@@ -1,0 +1,472 @@
+<!DOCTYPE html> 
+<html lang="ml"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+<title>സൗണ്ട് ബുക്ക് - അഡ്വാൻസ്ഡ് ക്വിസ് അഡ്മിൻ</title> 
+<style> 
+* { box-sizing: border-box; } 
+body { font-family: 'Segoe UI', sans-serif; padding: 10px; background: #eef2f3; text-align: center; margin: 0; } 
+.admin-box { background: white; max-width: 500px; margin: 10px auto; padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; } 
+h2, h4 { text-align: center; color: #2c3e50; margin-top: 5px; } 
+.section { background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; } 
+input[type="text"], select, input[type="password"], input[type="number"] { width: 100%; padding: 10px; margin: 5px 0 10px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; } 
+button { color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin: 5px 0; font-weight: bold; width: 100%; font-size: 14px; } 
+.btn-blue { background: #3498db; width: 100%; padding: 12px; } 
+.btn-green { background: #2ecc71; width: 100%; padding: 12px; } 
+.btn-orange { background: #e67e22; width: 100%; padding: 12px; } 
+.btn-record { background: #e74c3c; width: 100%; padding: 10px; margin-top: 5px; } 
+.btn-stop { background: #2c3e50; display: none; width: 100%; padding: 10px; margin-top: 5px; } 
+.btn-danger { background: #e74c3c; padding: 5px 10px; font-size: 12px; width: auto; display: inline-block; margin-left: 5px; } 
+.manage-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; color: #333; } 
+.audio-row { background: #fff; border: 1px solid #e0e0e0; padding: 10px; border-radius: 5px; margin-bottom: 10px; } 
+.audio-title { font-weight: bold; color: #34495e; font-size: 13px; } 
+audio { margin-top: 5px; display: none; width: 100%; } 
+.status-text { font-size: 12px; font-weight: bold; color: #e74c3c; margin: 2px 0; text-align: center; } 
+.loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; z-index: 9999; } 
+.page-badge { background: #34495e; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; float: right; } 
+.grid-2 { display: flex; gap: 10px; }
+.grid-2 div { flex: 1; }
+</style> 
+</head> 
+<body> 
+
+<div class="loading-overlay" id="loadingOverlay" style="flex-direction: column;"> 
+<span id="loadText">📦 GitHub-ല്‍ നിന്ന് പഴയ ഡാറ്റകള്‍ ശേഖരിക്കുന്നു...</span> 
+</div> 
+
+<div class="admin-box" style="border-top: 4px solid #34495e;"> 
+<h2>🔑 GitHub കോൺഫിഗറേഷൻ</h2> 
+<label>GitHub Personal Access Token:</label> 
+<input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx എന്ന് തുടങ്ങുന്ന ടോക്കൺ ഇവിടെ നൽകുക" onchange="saveTokenToLocal()"> 
+</div> 
+
+<div class="admin-box"> 
+<h2>🏫 മദ്രസ & വിദ്യാർത്ഥി മാനേജ്‌മെന്റ്</h2> 
+<p id="syncStatus" style="color: #27ae60; font-weight: bold; text-align: center; margin: 0; font-size: 13px;">🔄 ഗിറ്റ്ഹബ്ബ് സിങ്ക് ലോഡ് ചെയ്യുന്നു...</p> 
+<div class="section"> 
+<h4>1. മദ്രസകൾ നിയന്ത്രിക്കുക:</h4> 
+<input type="text" id="madrasaName" placeholder="മദ്രസയുടെ പേര് എഴുതുക"> 
+<button class="btn-blue" onclick="addMadrasaData()">➕ മദ്രസ ലിസ്റ്റിലേക്ക് ചേർക്കുക</button> 
+<div id="madrasaManageList" style="margin-top: 10px; max-height: 150px; overflow-y: auto; background: #f9f9f9; padding: 5px; border-radius: 4px;"></div> 
+</div> 
+<div class="section"> 
+<h4>2. കുട്ടികളുടെ പേര് നിയന്ത്രിക്കുക:</h4> 
+<label>മദ്രസ തിരഞ്ഞെടുക്കുക:</label> 
+<select id="madrasaSelect" onchange="loadStudentManageList()"></select> 
+<input type="text" id="studentName" placeholder="കുട്ടിയുടെ പേര് എഴുതുക"> 
+<button class="btn-green" onclick="addStudentData()">➕ കുട്ടിയെ ലിസ്റ്റിലേക്ക് ചേർക്കുക</button> 
+<div id="studentManageList" style="margin-top: 10px; max-height: 150px; overflow-y: auto; background: #f9f9f9; padding: 5px; border-radius: 4px;"></div> 
+</div> 
+</div> 
+
+<div class="admin-box" style="border-top: 4px solid #9b59b6;">
+<h2>📚 പാഠഭാഗ വിവരങ്ങൾ (Quiz Details)</h2>
+<div class="section">
+<div class="grid-2">
+    <div>
+        <label>ക്ലാസ് (Class):</label>
+        <input type="text" id="quizClass" placeholder="ഉദാ: Class 4">
+    </div>
+    <div>
+        <label>വിഷയം (Subject):</label>
+        <input type="text" id="quizSubject" placeholder="ഉദാ: ഫിഖ്ഹ്">
+    </div>
+</div>
+<div class="grid-2">
+    <div>
+        <label>പാർട്ട് (Part):</label>
+        <input type="text" id="quizPart" placeholder="ഉദാ: Part 1">
+    </div>
+    <div>
+        <label>ചാപ്റ്റർ (Chapter):</label>
+        <input type="text" id="quizChapter" placeholder="ഉദാ: Chapter 2">
+    </div>
+</div>
+<label>പാഠത്തിന്റെ പേര് (Lesson Name):</label>
+<input type="text" id="quizLessonName" placeholder="ഉദാ: വുളൂഅ്">
+</div>
+</div>
+
+<div class="admin-box" style="border-top: 4px solid #e67e22;"> 
+<h2>📝 ക്വിസ്സ് മാനേജർ <span class="page-badge" id="quizCountBadge">ആകെ ചോദ്യങ്ങൾ: 0</span> </h2> 
+
+<div class="section" style="background: #fff3e0; border-color: #ffe0b2;"> 
+<h4>📚 നിലവിലുള്ള ചോദ്യങ്ങളുടെ ലിസ്റ്റ്:</h4> 
+<div id="existingQuizList" style="max-height: 150px; overflow-y: auto; background: #fff; padding: 5px; border-radius: 4px; border: 1px solid #ffcc80;"></div> 
+</div> 
+
+<div class="section"> 
+<h4>🆕 പുതിയ ക്വിസ് ചോദ്യം ചേർക്കുക:</h4> 
+
+<div class="audio-row">
+<div class="audio-title">🎙️ 1. ചോദ്യം (Question):</div>
+<input type="text" id="text_q" placeholder="ചോദ്യം ഇവിടെ എഴുതുക...">
+<button type="button" class="btn-record" id="startBtn_q" onclick="startRecording('q')">🎤 വോയ്സ് റെക്കോർഡ് ചെയ്യുക</button> 
+<button type="button" class="btn-stop" id="stopBtn_q" onclick="stopRecording('q')">🛑 നിർത്തുക</button> 
+<p class="status-text" id="status_q"></p> 
+<audio id="playback_q" controls></audio>
+</div>
+
+<div class="audio-row" style="border-left: 4px solid #2ecc71;">
+<div class="audio-title" style="color: #2ecc71;">✅ 2. ശരിയുത്തരം (Correct Answer):</div>
+<input type="text" id="text_correct" placeholder="ശരിയുത്തരം ഇവിടെ എഴുതുക...">
+<button type="button" class="btn-record" id="startBtn_correct" onclick="startRecording('correct')">🎤 വോയ്സ് റെക്കോർഡ് ചെയ്യുക</button> 
+<button type="button" class="btn-stop" id="stopBtn_correct" onclick="stopRecording('correct')">🛑 നിർത്തുക</button> 
+<p class="status-text" id="status_correct"></p> 
+<audio id="playback_correct" controls></audio>
+</div>
+
+<div class="audio-row" style="border-left: 4px solid #e74c3c;">
+<div class="audio-title" style="color: #e74c3c;">❌ 3. തെറ്റായ ഉത്തരം 1 (Wrong Answer 1):</div>
+<input type="text" id="text_wrong1" placeholder="തെറ്റായ ഉത്തരം 1 എഴുതുക...">
+<button type="button" class="btn-record" id="startBtn_wrong1" onclick="startRecording('wrong1')">🎤 വോയ്സ് റെക്കോർഡ് ചെയ്യുക</button> 
+<button type="button" class="btn-stop" id="stopBtn_wrong1" onclick="stopRecording('wrong1')">🛑 നിർത്തുക</button> 
+<p class="status-text" id="status_wrong1"></p> 
+<audio id="playback_wrong1" controls></audio>
+</div>
+
+<div class="audio-row" style="border-left: 4px solid #e74c3c;">
+<div class="audio-title" style="color: #e74c3c;">❌ 4. തെറ്റായ ഉത്തരം 2 (Wrong Answer 2):</div>
+<input type="text" id="text_wrong2" placeholder="തെറ്റായ ഉത്തരം 2 എഴുതുക...">
+<button type="button" class="btn-record" id="startBtn_wrong2" onclick="startRecording('wrong2')">🎤 വോയ്സ് റെക്കോർഡ് ചെയ്യുക</button> 
+<button type="button" class="btn-stop" id="stopBtn_wrong2" onclick="stopRecording('wrong2')">🛑 നിർത്തുക</button> 
+<p class="status-text" id="status_wrong2"></p> 
+<audio id="playback_wrong2" controls></audio>
+</div>
+
+<button type="button" class="btn-orange" style="margin-top:10px;" onclick="addQuizToMemory()">➕ ഈ ചോദ്യം ലിസ്റ്റിലേക്ക് മാറ്റുക</button> 
+</div> 
+</div> 
+
+<div class="admin-box" style="border: none; background: transparent; padding: 0;">
+<button class="btn-green" style="font-size:16px; width: 100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="publishToGitHubDirectly()">🚀 ക്വിസ്സ് വിവരങ്ങൾ നേരിട്ട് GitHub-ലേക്ക് അപ്ഡേറ്റ് ചെയ്യുക</button> 
+<h4 id="totalQuizzesText" style="color: #27ae60; text-align:center; margin-top:5px;">(നിലവിൽ 0 ചോദ്യങ്ങൾ തയാറായിട്ടുണ്ട്)</h4> 
+</div>
+
+<script> 
+const GH_USER = "zain-zain22"; 
+const GH_REPO = "sound-book-admin"; 
+const GH_BRANCH = "main"; 
+let masterSchoolData = {}; 
+let quizMemory = []; 
+
+let recordedBlobs = { q: null, correct: null, wrong1: null, wrong2: null };
+let mediaRecorder; 
+let audioChunks = []; 
+let currentType = "";
+
+window.onload = function() { 
+if(localStorage.getItem('gh_token')) { 
+document.getElementById('ghToken').value = localStorage.getItem('gh_token'); 
+} 
+loadOldDataFromGitHub(); 
+} 
+
+function saveTokenToLocal() { 
+let tok = document.getElementById('ghToken').value.trim(); 
+localStorage.setItem('gh_token', tok); 
+} 
+
+async function loadOldDataFromGitHub() { 
+document.getElementById('loadingOverlay').style.display = 'flex'; 
+try { 
+let res1 = await fetch('data/master_list.json?t=' + Date.now()); 
+if(res1.ok) masterSchoolData = await res1.json(); 
+} catch (e) {} 
+try { 
+let res2 = await fetch('data/quiz_data.json?t=' + Date.now()); 
+if(res2.ok) { 
+let oldQuiz = await res2.json(); 
+if(oldQuiz) {
+    if(oldQuiz.quizInfo) {
+        document.getElementById('quizClass').value = oldQuiz.quizInfo.class || '';
+        document.getElementById('quizSubject').value = oldQuiz.quizInfo.subject || '';
+        document.getElementById('quizPart').value = oldQuiz.quizInfo.part || '';
+        document.getElementById('quizChapter').value = oldQuiz.quizInfo.chapter || '';
+        document.getElementById('quizLessonName').value = oldQuiz.quizInfo.lessonName || '';
+    }
+    if(Array.isArray(oldQuiz.questions)) { 
+        quizMemory = oldQuiz.questions.map(q => ({ ...q, isNew: false })); 
+    } 
+}
+} 
+} catch(e) {} 
+loadDropdowns(); 
+loadMadrasaManageList(); 
+loadStudentManageList(); 
+renderExistingQuizList(); 
+document.getElementById('syncStatus').innerText = "✅ ഗിറ്റ്ഹബ്ബ് ഡാറ്റ സിങ്ക് പൂർത്തിയായി!"; 
+document.getElementById('loadingOverlay').style.display = 'none'; 
+} 
+
+function loadDropdowns() { 
+const m1 = document.getElementById('madrasaSelect'); 
+m1.innerHTML = ''; 
+Object.keys(masterSchoolData).sort().forEach(madrasa => { 
+let opt = document.createElement('option'); 
+opt.value = madrasa; opt.innerText = madrasa; m1.appendChild(opt); 
+}); 
+} 
+
+function loadMadrasaManageList() { 
+let container = document.getElementById('madrasaManageList'); 
+container.innerHTML = ''; 
+Object.keys(masterSchoolData).sort().forEach(m => { 
+let div = document.createElement('div'); 
+div.className = 'manage-item'; 
+div.innerHTML = `<span>🏫 ${m}</span> <button class="btn-danger" onclick="deleteMadrasa('${m}')">🗑️</button>`; 
+container.appendChild(div); 
+}); 
+} 
+
+function addMadrasaData() { 
+let name = document.getElementById('madrasaName').value.trim(); 
+if(!name) return alert("പേര് നൽകുക!"); 
+if(masterSchoolData[name]) return alert("ഈ മദ്രസ നിലവിലുണ്ട്!"); 
+masterSchoolData[name] = []; 
+document.getElementById('madrasaName').value = ''; 
+loadDropdowns(); loadMadrasaManageList(); 
+} 
+
+function deleteMadrasa(name) { 
+if(confirm(`തീർച്ചയായും ${name} മദ്രസയും ഒഴിവാക്കണോ?`)) { 
+delete masterSchoolData[name]; 
+loadDropdowns(); loadMadrasaManageList(); loadStudentManageList(); 
+} 
+} 
+
+function loadStudentManageList() { 
+let container = document.getElementById('studentManageList'); 
+container.innerHTML = ''; 
+let madrasa = document.getElementById('madrasaSelect').value; 
+if(!madrasa || !masterSchoolData[madrasa]) return; 
+masterSchoolData[madrasa].sort().forEach(student => { 
+let div = document.createElement('div'); 
+div.className = 'manage-item'; 
+div.innerHTML = `<span>👤 ${student}</span> <button class="btn-danger" onclick="deleteStudent('${madrasa}', '${student}')">🗑️</button>`; 
+container.appendChild(div); 
+}); 
+} 
+
+function addStudentData() { 
+let madrasa = document.getElementById('madrasaSelect').value; 
+let student = document.getElementById('studentName').value.trim(); 
+if(!madrasa) return alert("ആദ്യം മദ്രസ തിരഞ്ഞെടുക്കുക!"); 
+if(!student) return alert("പേര് എഴുതുക!"); 
+if(masterSchoolData[madrasa].includes(student)) return alert("ഈ കുട്ടി നിലവിലുണ്ട്!"); 
+masterSchoolData[madrasa].push(student); 
+document.getElementById('studentName').value = ''; 
+loadStudentManageList(); 
+} 
+
+function deleteStudent(madrasa, student) { 
+if(confirm(`തീർച്ചയായും ${student} എന്ന കുട്ടിയെ ഒഴിവാക്കണോ?`)) { 
+masterSchoolData[madrasa] = masterSchoolData[madrasa].filter(s => s !== student); 
+loadStudentManageList(); 
+} 
+} 
+
+function renderExistingQuizList() { 
+let container = document.getElementById('existingQuizList'); 
+container.innerHTML = ''; 
+if(quizMemory.length === 0) { 
+container.innerHTML = '<p style="font-size:12px; color:#999; text-align:center;">ചോദ്യങ്ങൾ ഒന്നും ലഭ്യമല്ല.</p>'; 
+return; 
+} 
+quizMemory.forEach((quiz, idx) => { 
+let div = document.createElement('div'); 
+div.className = 'manage-item'; 
+let qNum = idx + 1; 
+let previewText = quiz.qText ? ` - ${quiz.qText.substring(0, 20)}...` : '';
+div.innerHTML = ` 
+<div><b>ചോദ്യം ${qNum}</b><span style="color:#7f8c8d; font-size:12px;">${previewText}</span></div> 
+<div> 
+<button class="btn-danger" onclick="deleteQuiz(${idx})">🗑️ Delete</button> 
+</div> `; 
+container.appendChild(div); 
+}); 
+document.getElementById('quizCountBadge').innerText = `ആകെ ചോദ്യങ്ങൾ: ${quizMemory.length}`; 
+document.getElementById('totalQuizzesText').innerText = `(നിലവിൽ ${quizMemory.length} ചോദ്യങ്ങൾ തയാറായിട്ടുണ്ട്)`; 
+} 
+
+function deleteQuiz(index) { 
+if(confirm(`തീർച്ചയായും ചോദ്യം ${index + 1} ഡിലീറ്റ് ചെയ്യണോ?`)) { 
+quizMemory.splice(index, 1); 
+renderExistingQuizList(); 
+} 
+} 
+
+function startRecording(type) { 
+currentType = type;
+navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => { 
+let options = { mimeType: 'audio/webm' };
+if (MediaRecorder.isTypeSupported('audio/mp4')) {
+    options = { mimeType: 'audio/mp4' };
+}
+mediaRecorder = new MediaRecorder(stream, options); 
+mediaRecorder.start(); 
+audioChunks = []; 
+mediaRecorder.addEventListener("dataavailable", event => audioChunks.push(event.data)); 
+mediaRecorder.addEventListener("stop", () => { 
+const audioBlob = new Blob(audioChunks, { type: options.mimeType }); 
+recordedBlobs[currentType] = audioBlob; 
+let playback = document.getElementById('playback_' + currentType);
+playback.src = URL.createObjectURL(audioBlob); 
+playback.style.display = 'block'; 
+}); 
+
+document.getElementById('startBtn_' + type).style.display = 'none'; 
+document.getElementById('stopBtn_' + type).style.display = 'block'; 
+document.getElementById('status_' + type).innerText = "🔴 റെക്കോർഡ് ചെയ്യുന്നു..."; 
+}).catch(() => alert("മൈക്ക് ഓൺ ചെയ്യുക അല്ലെങ്കിൽ പെർമിഷൻ നൽകുക!")); 
+} 
+
+function stopRecording(type) { 
+mediaRecorder.stop(); 
+document.getElementById('startBtn_' + type).style.display = 'block'; 
+document.getElementById('stopBtn_' + type).style.display = 'none'; 
+document.getElementById('status_' + type).innerText = "✅ റെക്കോർഡിംഗ് കഴിഞ്ഞു."; 
+} 
+
+function addQuizToMemory() { 
+let qText = document.getElementById('text_q').value.trim();
+let correctText = document.getElementById('text_correct').value.trim();
+let wrong1Text = document.getElementById('text_wrong1').value.trim();
+let wrong2Text = document.getElementById('text_wrong2').value.trim();
+
+if(!qText || !correctText || !wrong1Text || !wrong2Text) {
+    return alert("ദയവായി ചോദ്യവും മൂന്ന് ഉത്തരങ്ങളും നിർബന്ധമായും ടൈപ്പ് ചെയ്ത് നൽകുക!");
+}
+if(!recordedBlobs.q || !recordedBlobs.correct || !recordedBlobs.wrong1 || !recordedBlobs.wrong2) {
+    return alert("ദയവായി ചോദ്യത്തിനും ഉത്തരങ്ങൾക്കുമുള്ള വോയ്സ് നിർബന്ധമായും റെക്കോർഡ് ചെയ്യുക!");
+}
+
+quizMemory.push({ 
+isNew: true, 
+qText: qText,
+correctText: correctText,
+wrong1Text: wrong1Text,
+wrong2Text: wrong2Text,
+blobs: {
+    q: recordedBlobs.q,
+    correct: recordedBlobs.correct,
+    wrong1: recordedBlobs.wrong1,
+    wrong2: recordedBlobs.wrong2
+}
+}); 
+
+alert("🎯 ഈ ചോദ്യം വിജയകരമായി ലിസ്റ്റിലേക്ക് മാറ്റി!"); 
+
+// ഫോം റീസെറ്റ് ചെയ്യുക
+['q', 'correct', 'wrong1', 'wrong2'].forEach(type => {
+    recordedBlobs[type] = null;
+    document.getElementById('text_' + type).value = "";
+    document.getElementById('playback_' + type).style.display = 'none';
+    document.getElementById('status_' + type).innerText = "";
+});
+
+renderExistingQuizList(); 
+} 
+
+function blobToBase64(blob) { 
+return new Promise((resolve, reject) => { 
+const reader = new FileReader(); 
+reader.onloadend = () => resolve(reader.result.split(',')[1]); 
+reader.onerror = reject; 
+reader.readAsDataURL(blob); 
+}); 
+} 
+
+async function uploadToGitHubAPI(path, blobData, token) { 
+const url = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${path}`; 
+const base64Content = await blobToBase64(blobData); 
+let sha = null; 
+try { 
+let checkRes = await fetch(url, { headers: { "Authorization": `token ${token}` } }); 
+if(checkRes.ok) { 
+let checkData = await checkRes.json(); sha = checkData.sha; 
+} 
+} catch(e) {} 
+let bodyObj = { message: `Admin update: ${path}`, content: base64Content, branch: GH_BRANCH }; 
+if(sha) bodyObj.sha = sha; 
+let res = await fetch(url, { method: "PUT", headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(bodyObj) }); 
+if(!res.ok) { 
+let errText = await res.text(); 
+throw new Error(`GitHub Upload Failed: ${errText}`); 
+} 
+} 
+
+async function publishToGitHubDirectly() { 
+let token = document.getElementById('ghToken').value.trim(); 
+if(!token) return alert("ദയവായി ആദ്യം താങ്കളുടെ GitHub ടോക്കൺ മുകളിൽ നൽകുക!"); 
+if(quizMemory.length === 0) return alert("കുറഞ്ഞത് ഒരു ചോദ്യമെങ്കിലും ഉണ്ടാകണം!"); 
+const overlay = document.getElementById('loadingOverlay'); 
+overlay.style.display = 'flex'; 
+
+try { 
+document.getElementById('loadText').innerText = "📝 മദ്രസ ലിസ്റ്റ് GitHub-ലേക്ക് അപ്ഡേറ്റ് ചെയ്യുന്നു..."; 
+let masterBlob = new Blob([JSON.stringify(masterSchoolData, null, 2)], {type: "application/json"}); 
+await uploadToGitHubAPI("data/master_list.json", masterBlob, token); 
+
+let quizJsonArray = []; 
+for(let i = 0; i < quizMemory.length; i++) { 
+let item = quizMemory[i]; 
+let audioUrls = {};
+
+if(item.isNew) { 
+    document.getElementById('loadText').innerText = `🎙️ ചോദ്യം ${i + 1} ഓഡിയോകൾ അപ്‌ലോഡ് ചെയ്യുന്നു...`;
+    let types = ['q', 'correct', 'wrong1', 'wrong2'];
+    for(let t of types) {
+        let ext = item.blobs[t].type.includes("mp4") ? "mp4" : "webm";
+        let fileName = `quiz_${Date.now()}_q${i}_${t}.${ext}`;
+        await uploadToGitHubAPI(`data/${fileName}`, item.blobs[t], token);
+        audioUrls[t] = `data/${fileName}`;
+    }
+} else { 
+    audioUrls = { q: item.qSrc, correct: item.correctSrc, wrong1: item.wrong1Src, wrong2: item.wrong2Src };
+} 
+
+quizJsonArray.push({ 
+    qText: item.qText,
+    correctText: item.correctText,
+    wrong1Text: item.wrong1Text,
+    wrong2Text: item.wrong2Text,
+    qSrc: audioUrls.q,
+    correctSrc: audioUrls.correct,
+    wrong1Src: audioUrls.wrong1,
+    wrong2Src: audioUrls.wrong2
+}); 
+} 
+
+// ഹെഡർ ഇൻപുട്ടുകളുടെ വാല്യൂസ് എടുക്കുന്നു
+let quizInfoObj = {
+    class: document.getElementById('quizClass').value.trim(),
+    subject: document.getElementById('quizSubject').value.trim(),
+    part: document.getElementById('quizPart').value.trim(),
+    chapter: document.getElementById('quizChapter').value.trim(),
+    lessonName: document.getElementById('quizLessonName').value.trim()
+};
+
+document.getElementById('loadText').innerText = "📖 ക്വിസ് വിവരങ്ങൾ അപ്ഡേറ്റ് ചെയ്യുന്നു..."; 
+let finalOutput = { 
+    version: Date.now(), 
+    quizInfo: quizInfoObj, 
+    questions: quizJsonArray 
+};
+
+let quizBlob = new Blob([JSON.stringify(finalOutput, null, 2)], {type: "application/json"}); 
+await uploadToGitHubAPI("data/quiz_data.json", quizBlob, token); 
+
+overlay.style.display = 'none'; 
+alert("🎉 വിജയകരം! എല്ലാ മാറ്റങ്ങളും നേരിട്ട് GitHub-ലേക്ക് അപ്ഡേറ്റ് ചെയ്യപ്പെട്ടു."); 
+window.location.reload(); 
+} catch (error) { 
+console.error(error); 
+overlay.style.display = 'none'; 
+alert("❌ അപ്‌ലോഡ് പരാജയപ്പെട്ടു! " + error.message); 
+} 
+} 
+</script> 
+</body> 
+</html>
