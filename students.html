@@ -27,7 +27,7 @@ button { color: white; border: none; padding: 12px; border-radius: 5px; cursor: 
 .info-table td { padding: 6px; border: 1px solid #ffe0b2; background: #fff8e1; color: #2c3e50; } 
 .hidden { display: none !important; } 
 
-/* പുതിയ വിജയി സർട്ടിഫിക്കറ്റ് സ്റ്റൈൽ (1000824982.jpg റെഫറൻസ്) */
+/* വിജയി സർട്ടിഫിക്കറ്റ് സ്റ്റൈൽ */
 .cert-box { background: #002855; border: 3px double #ffd700; max-width: 500px; margin: 10px auto; padding: 25px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.5); } 
 .cert-title { font-size: 28px; color: #ffd700; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 2px #000; } 
 .cert-section { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid #ffd700; margin-bottom: 20px; } 
@@ -93,7 +93,7 @@ button { color: white; border: none; padding: 12px; border-radius: 5px; cursor: 
 <button class="btn-green hidden" id="nextBtn" onclick="nextQuestion()">അടുത്ത ചോദ്യം ➡️</button> 
 </div> 
 
-<!-- 3. വിജയി സർട്ടിഫിക്കറ്റ് പേജ് (1000824982.jpg ഫയൽ പ്രകാരം രൂപകൽപ്പന ചെയ്തത്) -->
+<!-- 3. വിജയി സർട്ടിഫിക്കറ്റ് പേജ് -->
 <div class="cert-box hidden" id="resultPage"> 
 <div class="cert-title">🎉 അഭിനന്ദനങ്ങൾ! 🎉</div> 
 <div id="certSchoolName" style="font-size: 20px; font-weight: bold; color: #ffd700; margin-bottom: 5px;"></div> 
@@ -103,7 +103,7 @@ button { color: white; border: none; padding: 12px; border-radius: 5px; cursor: 
 <table class="cert-table"> 
 <tr><td>പേര്:</td><td id="certStudentName">-</td></tr> 
 <tr><td>ശ്രമം:</td><td id="certAttemptCount">-</td></tr> 
-<tr><td>время (സമയം):</td><td id="certTimeTaken">-</td></tr> 
+<tr><td>സമയം:</td><td id="certTimeTaken">-</td></tr> 
 <tr><td>പൂർത്തിയാക്കിയത്:</td><td id="certDateTime">-</td></tr> 
 </table> 
 
@@ -128,7 +128,6 @@ let questions = [];
 let currentQuestionIndex = 0; 
 let optionClicked = false; 
 
-// പോയിന്റും ടൈമറും ട്രാക്ക് ചെയ്യാനുള്ള വേരിയബിളുകൾ
 let basePoints = 1000; 
 let currentPoints = 1000; 
 let startTime = 0; 
@@ -149,6 +148,7 @@ if(res2.ok) quizData = await res2.json();
 setupLoginDropdowns(); 
 document.getElementById('loadingOverlay').style.display = 'none'; 
 } catch (e) { 
+document.getElementById('loadingOverlay').style.display = 'none';
 alert("ഡാറ്റ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല! ഫയലുകൾ കൃത്യമാണെന്ന് ഉറപ്പുവരുത്തുക."); 
 console.error(e); 
 } 
@@ -167,9 +167,8 @@ updateStudentDropdown();
 function updateStudentDropdown() { 
 const mVal = document.getElementById('madrasaSelect').value; 
 const sSelect = document.getElementById('studentSelect'); 
-sSelect.innerHTML = ''; 
+sSelect.innerHTML = '<option value="">-- പേര് തിരഞ്ഞെടുക്കുക --</option>'; 
 if(!mVal || !masterSchoolData[mVal]) { 
-sSelect.innerHTML = '<option value="">-- ആദ്യം മദ്രസ തിരഞ്ഞെടുക്കുക --</option>'; 
 document.getElementById('studentAttemptInfo').innerText = '';
 return; 
 } 
@@ -180,10 +179,9 @@ opt.value = s; opt.innerText = s; sSelect.appendChild(opt);
 checkExistingStudentProgress();
 } 
 
-// തിരഞ്ഞെടുക്കുന്ന കുട്ടിയുടെ നിലവിലെ ശ്രമങ്ങളും പോയിന്റും ലോഗിൻ പേജിൽ കാണിക്കാൻ
 function checkExistingStudentProgress() {
 const student = document.getElementById('studentSelect').value;
-if(!student) {
+if(!student || student.includes('--')) {
     document.getElementById('studentAttemptInfo').innerText = '';
     return;
 }
@@ -196,7 +194,7 @@ function startQuiz() {
 let madrasa = document.getElementById('madrasaSelect').value; 
 let student = document.getElementById('studentSelect').value; 
 
-if(!madrasa || !student) { 
+if(!madrasa || !student || student.includes('--')) { 
 return alert("ദയവായി മദ്രസയും പേരും തിരഞ്ഞെടുക്കുക!"); 
 } 
 
@@ -207,9 +205,7 @@ return alert("ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ഒന്
 questions = quizData.questions; 
 currentQuestionIndex = 0; 
 
-// 🎯 ഓരോ കുട്ടിയുടെയും അറ്റംപ്റ്റ് അനുസരിച്ച് പോയിന്റ് കണക്കാക്കുന്നു
 let attempts = localStorage.getItem('attempt_' + student) ? parseInt(localStorage.getItem('attempt_' + student)) : 1;
-// ഓരോ അറ്റംപ്റ്റിനും 10 പോയിന്റ് വീതം കുറയ്ക്കുന്നു
 let attemptPenalty = (attempts - 1) * 10; 
 basePoints = Math.max(100, 1000 - attemptPenalty); 
 currentPoints = basePoints;
@@ -226,8 +222,8 @@ document.getElementById('infoLesson').innerHTML = `<b>പാഠം:</b> ${quizDa
 document.getElementById('loginPage').classList.add('hidden'); 
 document.getElementById('quizPage').classList.remove('hidden'); 
 
-// 🎯 ടൈമർ സെറ്റ് ചെയ്യുന്നു - കളിക്കാൻ എടുക്കുന്ന സമയത്തിനനുസരിച്ച് ഓരോ സെക്കൻഡിലും ഓരോ പോയിന്റ് കുറയുന്നു
 startTime = Date.now(); 
+if(timerInterval) clearInterval(timerInterval);
 timerInterval = setInterval(function() { 
     if(currentPoints > 0) { 
         currentPoints--; 
@@ -328,25 +324,20 @@ selectedBtn.classList.add('correct');
 selectedBtn.innerHTML = `✅ ${selectedBtn.innerHTML}`; 
 document.getElementById('nextBtn').classList.remove('hidden'); 
 } else { 
-// 🎯 തെറ്റിയാൽ - ചോദ്യങ്ങൾ ആദ്യം മുതൽ വരണം!
 selectedBtn.classList.add('wrong'); 
 selectedBtn.innerHTML = `❌ ${selectedBtn.innerHTML}`; 
 
 let student = document.getElementById('studentSelect').value;
-// നിലവിലെ അറ്റംപ്റ്റ് കൗണ്ട് കൂട്ടി വെക്കുന്നു
 let currentAttempts = localStorage.getItem('attempt_' + student) ? parseInt(localStorage.getItem('attempt_' + student)) : 1;
 localStorage.setItem('attempt_' + student, currentAttempts + 1);
 
-clearInterval(timerInterval); 
+if(timerInterval) clearInterval(timerInterval); 
 
-// 2.5 സെക്കൻഡിന് ശേഷം തോറ്റ വിവരം കാണിച്ച് കളി റീസെറ്റ് ചെയ്ത് ലോഗിൻ പേജിലേക്ക് വിടുന്നു
 setTimeout(function() { 
     alert("ഉത്തരം തെറ്റാണ്! നിങ്ങൾ തോറ്റിരിക്കുന്നു. ചോദ്യങ്ങൾ വീണ്ടും ആദ്യം മുതൽ ആരംഭിക്കുന്നതിനായി ലോഗിൻ ചെയ്യുക."); 
-    
-    // ക്വിസ് സ്ക്രീൻ മറച്ച് ലോഗിൻ സ്ക്രീൻ കാണിക്കുന്നു (അടുത്ത കുട്ടിക്ക് വേണമെങ്കിൽ കളിക്കാം)
     document.getElementById('quizPage').classList.add('hidden'); 
     document.getElementById('loginPage').classList.remove('hidden'); 
-    checkExistingStudentProgress(); // പുതിയ അറ്റംപ്റ്റ് വിവരം അപ്ഡേറ്റ് ചെയ്യുന്നു
+    checkExistingStudentProgress(); 
 }, 2500); 
 } 
 } 
@@ -361,7 +352,7 @@ showResult();
 } 
 
 function showResult() { 
-clearInterval(timerInterval); 
+if(timerInterval) clearInterval(timerInterval); 
 document.getElementById('quizPage').classList.add('hidden'); 
 document.getElementById('resultPage').classList.remove('hidden'); 
 
@@ -370,7 +361,6 @@ let student = document.getElementById('studentSelect').value;
 let totalTimeSeconds = Math.floor((Date.now() - startTime) / 1000); 
 let finalAttempts = localStorage.getItem('attempt_' + student) ? localStorage.getItem('attempt_' + student) : 1;
 
-// വിജയ സർട്ടിഫിക്കറ്റ് വിവരങ്ങൾ (1000824982.jpg ഫയലിലുള്ളതുപോലെ)
 document.getElementById('certSchoolName').innerText = madrasa; 
 document.getElementById('certStudentName').innerText = student; 
 document.getElementById('certAttemptCount').innerText = finalAttempts; 
@@ -386,7 +376,6 @@ document.getElementById('certFinalPoints').innerText = `പോയിന്റ്
 let className = (quizData.quizInfo && quizData.quizInfo.class) ? quizData.quizInfo.class : ""; 
 document.getElementById('certClassStatus').innerText = `ക്ലാസ് ${className} തസ്കിയ വിജയിച്ചു.`; 
 
-// കുട്ടി ജയിച്ച സ്ഥിതിക്ക് ആ കുട്ടിയുടെ അറ്റംപ്റ്റ് കൗണ്ട് റീസെറ്റ് ചെയ്യാം
 localStorage.removeItem('attempt_' + student); 
 } 
 
@@ -394,6 +383,9 @@ function resetAndGoToLogin() {
 document.getElementById('resultPage').classList.add('hidden'); 
 document.getElementById('loginPage').classList.remove('hidden'); 
 document.getElementById('madrasaSelect').value = "";
-document.getElementById('studentSelect').innerHTML = "";
+document.getElementById('studentSelect').innerHTML = '<option value="">-- ആദ്യം മദ്രസ തിരഞ്ഞെടുക്കുക --</option>';
 document.getElementById('studentAttemptInfo').innerText = '';
 }
+</script> 
+</body> 
+</html>
