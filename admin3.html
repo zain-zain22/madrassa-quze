@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Madrassa App Suite - All-In-One Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text: #1f2937;
+            --text-light: #4b5563;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 20px; background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; padding: 30px 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(30, 58, 138, 0.15); }
+        header h1 { font-size: 28px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        
+        /* 🧭 ടാബ് സിസ്റ്റം സ്റ്റൈലുകൾ */
+        .tabs-container { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; background-color: #cbd5e1; color: #475569; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn.active { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .sync-status { background-color: #e0f2fe; border: 1px solid #7dd3fc; padding: 12px 20px; border-radius: 10px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #0369a1; }
+        .section-header { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: var(--primary); margin: 25px 0 15px 0; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+        .card { background-color: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; position: relative; }
+        .madrassa-card { border-left: 5px solid var(--warning); background-color: #fffdf9; }
+        .word-card { border-left: 5px solid var(--success); }
+        .card-header { padding: 15px 20px; background-color: rgba(0, 0, 0, 0.02); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .madrassa-card .card-title { color: #b45309; font-weight:600; }
+        .word-card .card-title { color: #047857; font-weight:600; }
+        .card-body { padding: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .form-group-full { grid-column: 1 / -1; }
+        label { font-size: 13px; font-weight: 600; color: var(--text-light); display:block; margin-bottom:5px; }
+        input[type="text"], input[type="password"], input[type="number"], select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+        textarea { resize: vertical; min-height: 80px; }
+        .arabic-input { direction: rtl; font-family: 'Amiri', sans-serif; font-size: 24px !important; text-align: right; }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger-light { background-color: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
+        .btn-outline { background-color: white; color: var(--primary); border: 1px solid var(--primary); }
+        .btn-block { width: 100%; padding: 14px; font-size: 16px; }
+        .btn-generate { background: linear-gradient(135deg, var(--warning), #f59e0b); color: #001f3f; font-size: 18px; margin-top: 25px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
+        
+        /* Canvas & Book Image Styles */
+        .image-container { position: relative; display: inline-block; border: 2px solid var(--primary); width: 100%; background: #000; border-radius: 8px; overflow: hidden; margin-top: 5px; }
+        .image-container img { display: block; width: 100%; height: auto; }
+        #pageDrawBoard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; z-index: 5; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center; position: relative; }
+        .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #333; font-weight: bold; }
+        .quiz-canvas-container { border: 2px solid #9b59b6; background: #fff; width: 100%; margin: 10px 0; position: relative; height: 280px; border-radius: 8px; }
+        #quizDrawBoard { width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+
+        /* Audio Controls */
+        .audio-controls { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px; background-color: var(--bg); border-radius: 8px; flex-wrap: wrap; }
+        .mic-btn { background-color: var(--danger); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+        .mic-btn.recording { background-color: var(--success); animation: pulse 1.2s infinite; }
+        .preview-btn { background-color: #3b82f6; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: none; }
+        .confirm-btn { background-color: #10b981; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: none; }
+        .audio-status { font-size: 13px; font-weight: 500; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; z-index: 9999; flex-direction: column; gap: 10px; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <span id="loadText">📦 GitHub-ല്‍ നിന്ന് ഡാറ്റകൾ ശേഖരിക്കുന്നു...</span>
+</div>
+
+<div class="container">
+    <header>
+        <h1><i class="fa-solid fa-sliders"></i> വേർഡ് ആപ്പ് മാസ്റ്റർ അഡ്മിൻ പാനൽ</h1>
+        <p>ശബ്ദം റെക്കോർഡ് ചെയ്ത് പ്ലേ ചെയ്തു നോക്കി ഉറപ്പിച്ചതിനു ശേഷം മാത്രം ആഡ് ചെയ്യാം.</p>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" id="tabBookBtn" onclick="switchTab('book')"><i class="fa-solid fa-book-open"></i> 1. ബുക്ക് റൂം (Page Designer)</button>
+        <button class="tab-btn" id="tabQuizBtn" onclick="switchTab('quiz')"><i class="fa-solid fa-gamepad"></i> 2. ക്വിസ്സ് റൂം (Quiz Manager)</button>
+        <button class="tab-btn" id="tabFolderBtn" onclick="switchTab('folder')"><i class="fa-solid fa-folder-plus"></i> 3. ഓട്ടോ ഫോൾഡർ അഡ്മിൻ</button>
+    </div>
+
+    <div class="sync-status" id="syncStatus">
+        <i class="fa-solid fa-spinner fa-spin"></i> GitHub വിവരങ്ങൾ ലോഡ് ചെയ്യുന്നു...
+    </div>
+
+    <div id="tab-book" class="tab-content active">
+        <div class="card" style="border-top: 4px solid var(--primary);">
+            <div class="card-header"><div class="card-title">📖 പാഠപുസ്തകം നിർമ്മിക്കുക</div></div>
+            <div class="card-body">
+                <div class="form-grid" style="margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>പാഠം നമ്പർ (Lesson Number):</label>
+                        <input type="number" id="lessonNum" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>പേജ് ചിത്രം തിരഞ്ഞെടുക്കുക:</label>
+                        <input type="file" id="imageUploader" accept="image/*">
+                    </div>
+                </div>
+
+                <div id="mappingSection" style="display:none;">
+                    <label>റീഡിങ് ടൈം വരകൾ ചിത്രത്തിന് മുകളിൽ വരയ്ക്കുക (ഓരോ വരയും താഴെ ഓരോ കാർഡായി മാറും):</label>
+                    <div class="image-container" id="imageContainer">
+                        <img id="bookImg" src="" alt="Book Page">
+                        <svg id="pageDrawBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+                    </div>
+                    <button class="btn btn-danger-light" style="margin: 10px 0;" onclick="clearReadingDrawBoard()">❌ എല്ലാ വരകളും മാറ്റുക</button>
+
+                    <div id="wordCardsContainer"></div>
+                    <button type="button" class="btn btn-success btn-block" onclick="addNewEmptyWordCard()">+ പുതിയ വാക്ക് ചേർക്കുക</button>
+                    <button type="button" class="btn btn-primary btn-block btn-generate" onclick="addNextPageToMemory()">💾 ഈ പേജ് പൂർണ്ണമായി സേവ് ചെയ്ത് മാറ്റുക</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-quiz" class="tab-content">
+        <div class="card" style="border-top: 4px solid var(--warning);">
+            <div class="card-header"><div class="card-title">📝 ക്വിസ്സ് ചോദ്യങ്ങൾ നിയന്ത്രിക്കുക</div></div>
+            <div class="card-body">
+                <div class="form-grid" style="margin-bottom: 15px;">
+                    <div class="form-group"><label>ക്ലാസ്:</label><input type="text" id="quizClass" placeholder="Class 4"></div>
+                    <div class="form-group"><label>വിഷയം:</label><input type="text" id="quizSubject" placeholder="ഫിഖ്ഹ്"></div>
+                    <div class="form-group"><label>പാർട്ട്:</label><input type="text" id="quizPart" placeholder="Part 1"></div>
+                    <div class="form-group"><label>ചാപ്റ്റർ:</label><input type="text" id="quizChapter" placeholder="Chapter 2"></div>
+                </div>
+                <label>പാഠത്തിന്റെ പേര്:</label>
+                <input type="text" id="quizLessonName" placeholder="വുളൂഅ്" style="margin-bottom: 20px;">
+
+                <div id="quizFormArea">
+                    </div>
+                <button class="btn btn-success" onclick="addQuizRow()"><i class="fa-solid fa-plus"></i> പുതിയ ക്വിസ് ചോദ്യം ചേർക്കുക</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-folder" class="tab-content">
+        <div class="section-header"><i class="fa-solid fa-mosque"></i> 1. മദ്രസകളും കുട്ടികളുടെ ലിസ്റ്റും</div>
+        <div id="madrassaArea"></div>
+        <button class="btn btn-outline" onclick="addMadrassaField()"><i class="fa-solid fa-plus"></i> മറ്റൊരു മദ്രസ കൂടി ചേർക്കുക</button>
+
+        <div class="section-header"><i class="fa-solid fa-book-open"></i> 2. പാഠത്തിലെ വാക്കുകൾ</div>
+        <div id="wordsArea"></div>
+        <button class="btn btn-success" onclick="addWordRow()"><i class="fa-solid fa-plus"></i> പുതിയ വാക്ക് ചേർക്കുക</button>
+
+        <hr style="border:0; border-top:1px solid var(--border); margin:30px 0;">
+        <button class="btn btn-primary btn-block btn-generate" onclick="generateMasterZip()"><i class="fa-solid fa-box-archive"></i> 'data' ഫോൾഡർ അടങ്ങിയ പുതിയ ZIP ഡൗൺലോഡ് ചെയ്യുക</button>
+    </div>
+
+    <div class="card" style="margin-top: 30px;">
+        <div class="card-header"><div class="card-title">🔑 GitHub കോൺഫിഗറേഷൻ & പബ്ലിഷ്</div></div>
+        <div class="card-body">
+            <label>GitHub Personal Access Token:</label>
+            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx എന്ന് തുടങ്ങുന്ന ടോക്കൺ" onchange="localStorage.setItem('gh_token', this.value)">
+            <button class="btn btn-primary btn-block" style="margin-top: 15px; background: #059669;" onclick="publishToGitHubDirectly()">🚀 മാറ്റങ്ങൾ ഒന്നായി GitHub-ലേക്ക് അപ്ഡേറ്റ് ചെയ്യുക</button>
+        </div>
+    </div>
+</div>
+
+<div id="quizModal" class="modal"> 
+    <div class="modal-content"> 
+        <span class="modal-close" onclick="closeQuizModal()">×</span> 
+        <h3 style="color:#9b59b6; margin-bottom:10px;">📝 ഹാൻഡ്‌റൈറ്റിംഗ് റെക്കോർഡർ</h3> 
+        <div class="quiz-canvas-container"><svg id="quizDrawBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg></div> 
+        <div style="display:flex; gap:10px;"> 
+            <button type="button" class="btn btn-danger-light" style="flex:1;" onclick="clearQuizDrawBoard()">❌ മായ്ക്കുക</button> 
+            <button type="button" class="btn btn-success" style="flex:1;" onclick="saveQuizDrawing()">✅ പൂർത്തിയാക്കുക</button> 
+        </div> 
+    </div> 
+</div>
+
+<script>
+const GH_USER = "zain-zain22"; 
+const GH_REPO = "madrassa-quze"; 
+const GH_BRANCH = "main"; 
+
+let madrassaCount = 0;
+let wordCount = 0;
+let quizCount = 0;
+let audioBlobs = {}; 
+let tempAudioBlobs = {}; 
+let mediaRecorders = {};
+let importedAudioFiles = {}; 
+
+let masterSchoolData = {}; 
+let allPagesMemory = []; 
+let quizMemory = []; 
+let currentPageWords = []; 
+let selectedImageFile = null; 
+let readingPaths = []; 
+let isReadingDrawing = false; 
+let quizPaths = []; 
+let isQuizDrawing = false; 
+let activeCardIndexForHandwriting = null;
+
+// ➔ ➔ കൺവേർഷൻ എഞ്ചിൻ ➔ ➔
+const initialVowels = { "അ":"اَ","ആ":"آ","ഇ":"اِ","ഈ":"اِی","ഉ":"اُ","ഊ":"اُو","ഋ":"ِرُ","എ":"ا٘","ഏ":"ا٘ے","ഐ":"اَیْ","ഒ":"اٗ","ഓ":"اٗو","ഔ":"اَوْ" };
+const baseConsonants = { "ൻ":"نْ","ൽ":"لْ","ർ":"رٛ","ൾ":"ۻۡ","ൺ":"ڹۡ","ൿ":"كۡ","ക്ക":"كّ","ഗ്ഗ":"گّ","ങ്ങ":"ۼّ","ച്ച":"چّ","ജ്ജ":"جّ","ഞ്ഞ":"ڿّ","ട്ട":"ڊّ","ണ്ണ":"ڹّ","ത്ത":"تّ","ദ്ധ":"دّ","ന്ന":"نّ","പ്പ":"پّ","ബ്ബ":"بّ","മ്മ":"مّ","യ്യ":"یّ","ല്ല":"لّ","വ്വ":"وّ","ശ്ശ":"ۺّ","സ്സ":"سّ","ള്ള":"ۻّ","റ്റ":"ڔّ","ന്ത":"نْت","ണ്ട":"ڹْڊ","ങ്ക":"نْگ","ഞ്ച":"ڿْച","മ്പ":"نْب","ന്റ":"نْڔ","സ്ഥ":"سْت","ക്ഷ":"كْش","ക്ത":"كْت","സ്ക":"سۡك","ക":"ك","ഖ":"كھ","ഗ":"گ","ഘ":"گھ","ങ":"ۼ","ച":"چ","ഛ":"چھ","ജ":"ج","ഝ":"جھ","ഞ":"ڿ","ട":"ڊ","ഠ":"ڊه","ഡ":"ڗ","ഢ":"ڗھ","ണ":"ڹ","ത":"ت","ഥ":"تھ","ദ":"د","ധ":"دھ","ന":"ن","പ":"پ","ഫ":"ف","ബ":"ب","ഭ":"بھ","മ":"م","യ":"ی","ര":"ڔ","ല":"ل","വ":"و","ശ":"ۺ","ഷ":"ش","സ":"സ","ഹ":"ه","ള":"ۻ","ഴ":"ژ","റ":"ر","ക്ര":"كْر","പ്ര":"پْر","ത്ര":"تْر","പ്ല":"پْل","സ്വ":"سْو","ത്വ":"تْو" };
+const vowelSigns = { "ാ":"َا","ി":"ِ","ീ":"ِی","ു":"ُ","ൂ":"ُو","െ":"٘","േ":"ي٘","ൈ":"َیْ","ൊ":"ٗ","ോ":"ٗو","ൗ":"َوْ","ൃ":"ِرُ","്":"ۡ","ം":"مٛ","ഃ":"َهْ" };
+const chillusSpecial = { "ം":"مْ" };
+const sortedConsonants = Object.keys(baseConsonants).sort((a,b)=>b.length-a.length);
+
+function convertMalayalamToArbi(text){
+  let result="",i=0;
+  while(i<text.length){
+    let char=text[i],found=false;
+    if(initialVowels[char]){result+=initialVowels[char];i++;continue;}
+    if(chillusSpecial[char]){result+=chillusSpecial[char];i++;continue;}
+    for(let con of sortedConsonants){
+      if(text.startsWith(con,i)){
+        let ni=i+con.length,nc=text[ni];
+        if(vowelSigns[nc]){result+=baseConsonants[con]+vowelSigns[nc];i=ni+1;}
+        else{result+=baseConsonants[con]+"َ";i=ni;}
+        found=true;break;
+      }
+    }
+    if(!found){result+=char;i++;}
+  }
+  return result;
+}
+
+function handleAutoConvert(id) {
+    let malInput = document.getElementById(`mal_${id}`);
+    let arbiInput = document.getElementById(`arbi_${id}`);
+    if (malInput && arbiInput) { arbiInput.value = convertMalayalamToArbi(malInput.value); }
+}
+
+function handleAutoConvertCard(idx, val) {
+    currentPageWords[idx].malayalam = val;
+    let converted = convertMalayalamToArbi(val);
+    currentPageWords[idx].arabic = converted;
+    document.getElementById(`card_arbi_${idx}`).value = converted;
+}
+
+// 🧭 ടാബ് സ്വിച്ചിങ് ലോജിക്
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    if(tabName === 'book') { document.getElementById('tabBookBtn').classList.add('active'); document.getElementById('tab-book').classList.add('active'); }
+    if(tabName === 'quiz') { document.getElementById('tabTabQuizBtn' || 'tabQuizBtn').classList.add('active'); document.getElementById('tab-quiz').classList.add('active'); }
+    if(tabName === 'folder') { document.getElementById('tabFolderBtn').classList.add('active'); document.getElementById('tab-folder').classList.add('active'); }
+}
+
+window.onload = function() {
+    if(localStorage.getItem('gh_token')) { document.getElementById('ghToken').value = localStorage.getItem('gh_token'); }
+    loadOldDataFromGitHub();
+    initReadingDrawingEngine();
+    initQuizDrawingEngine();
+};
+
+async function loadOldDataFromGitHub() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    // 1. ഫസ്റ്റ് ലോഡ്: ഓട്ടോ ഫോൾഡർ വിവരങ്ങൾ
+    try {
+        let res = await fetch('data/data.json?t=' + Date.now());
+        if(res.ok) {
+            let oldData = await res.json();
+            if(oldData.madrassas) { oldData.madrassas.forEach(m => addMadrassaField(m.name, m.metaInfo, m.students.join(', '))); } else { addMadrassaField(); }
+            if(oldData.words) {
+                for(let w of oldData.words) {
+                    addWordRow(w.mal, w.arbiText, w.audio);
+                    try { let aRes = await fetch('data/' + w.audio); if(aRes.ok) importedAudioFiles[w.audio] = await aRes.blob(); } catch(e){}
+                }
+            } else { addWordRow(); }
+        } else { addMadrassaField(); addWordRow(); }
+    } catch(e) { addMadrassaField(); addWordRow(); }
+
+    // 2. ബുക്ക് റൂം & ക്വിസ്സ് റൂം വിവരങ്ങൾ ബാക്ക്ഗ്രൗണ്ടിൽ സിങ്ക് ചെയ്യുന്നു
+    try { let res2 = await fetch('data/master_list.json?t='+Date.now()); if(res2.ok) masterSchoolData = await res2.json(); } catch(e){}
+    try { let res3 = await fetch('data/data_book.json?t='+Date.now()); if(res3.ok) { let bData = await res3.json(); if(bData.pages) allPagesMemory = bData.pages.map(p=>({...p, isNewPage:false})); } } catch(e){}
+    try {
+        let res4 = await fetch('data/quiz_data.json?t='+Date.now());
+        if(res4.ok) {
+            let qData = await res4.json();
+            if(qData.quizInfo) {
+                document.getElementById('quizClass').value = qData.quizInfo.class || '';
+                document.getElementById('quizSubject').value = qData.quizInfo.subject || '';
+                document.getElementById('quizPart').value = qData.quizInfo.part || '';
+                document.getElementById('quizChapter').value = qData.quizInfo.chapter || '';
+                document.getElementById('quizLessonName').value = qData.quizInfo.lessonName || '';
+            }
+            if(qData.questions) { qData.questions.forEach(q => addQuizRow(q.qText, q.correctText, q.wrong1Text, q.wrong2Text, q.qSrc, q.correctSrc, q.wrong1Src, q.wrong2Src)); } else { addQuizRow(); }
+        } else { addQuizRow(); }
+    } catch(e) { addQuizRow(); }
+
+    document.getElementById('syncStatus').innerHTML = `<i class="fa-solid fa-circle-check" style="color:#10b981;"></i> എല്ലാ വിവരങ്ങളും വിജയകരമായി സിങ്ക് ചെയ്തു!`;
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+/* ==================== 📖 ടാബ് 1: ബുക്ക് റൂം ഫങ്ക്ഷനുകൾ ==================== */
+document.getElementById('imageUploader').addEventListener('change', function(e) {
+    selectedImageFile = e.target.files[0]; if(!selectedImageFile) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        document.getElementById('bookImg').onload = function() {
+            document.getElementById('mappingSection').style.display = 'block';
+            clearReadingDrawBoard(); currentPageWords = []; renderWordCards();
+        }
+        document.getElementById('bookImg').src = event.target.result;
+    }
+    reader.readAsDataURL(selectedImageFile);
+});
+
+function clearReadingDrawBoard() { document.getElementById('pageDrawBoard').innerHTML = ""; readingPaths = []; }
+function initReadingDrawingEngine() {
+    let board = document.getElementById('pageDrawBoard');
+    function getCoords(e) { const rect = board.getBoundingClientRect(); let clientX = e.clientX ?? e.touches?.[0]?.clientX ?? 0; let clientY = e.clientY ?? e.touches?.[0]?.clientY ?? 0; return { x: Math.round(((clientX - rect.left) / rect.width) * 1000), y: Math.round(((clientY - rect.top) / rect.height) * 1000) }; }
+    function start(e) { isReadingDrawing = true; const c = getCoords(e); const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); for(let i=0; i<12; i++) { let p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("transform", `translate(${(i-6)*0.3}, ${-(i-6)})`); p.setAttribute("stroke", "#2980b9"); p.setAttribute("stroke-width", "2"); p.setAttribute("fill", "none"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("d", `M ${c.x} ${c.y}`); g.appendChild(p); } board.appendChild(g); readingPaths.push([{x: c.x, y: c.y}]); }
+    function move(e) { if(!isReadingDrawing) return; const c = getCoords(e); const g = board.lastElementChild; if(!g) return; g.querySelectorAll("path").forEach(p => p.setAttribute("d", p.getAttribute("d") + ` L ${c.x} ${c.y}`)); readingPaths[readingPaths.length - 1].push({x: c.x, y: c.y}); }
+    function end() { if(isReadingDrawing) { isReadingDrawing = false; addNewEmptyWordCard(); } }
+    board.addEventListener("mousedown", start); board.addEventListener("mousemove", move); window.addEventListener("mouseup", end);
+    board.addEventListener("touchstart", start, {passive:false}); board.addEventListener("touchmove", move, {passive:false}); window.addEventListener("touchend", end);
+}
+
+function renderWordCards() {
+    let container = document.getElementById('wordCardsContainer'); container.innerHTML = '';
+    currentPageWords.forEach((word, idx) => {
+        let card = document.createElement('div'); card.className = 'card word-card'; style="border-left: 5px solid var(--success); margin-top: 15px;"
+        card.innerHTML = `
+            <div class="card-header"><div class="card-title">🔤 വാക്ക് വിവരങ്ങൾ (ബോക്സ് ${idx+1})</div><button type="button" class="btn btn-danger-light" style="padding:4px 8px; font-size:12px;" onclick="deleteWordCard(${idx})">🗑️ Delete</button></div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>മലയാളം വാക്ക്:</label><input type="text" value="${word.malayalam || ''}" placeholder="ഉദാ: ആരാമം" oninput="handleAutoConvertCard(${idx}, this.value)"></div>
+                    <div class="form-group"><label>അറബി മലയാളം വാക്ക്:</label><input type="text" id="card_arbi_${idx}" class="arabic-input" value="${word.arabic || ''}" oninput="currentPageWords(${idx}).arabic = this.value"></div>
+                </div>
+                <button type="button" class="btn btn-outline" style="margin-top:10px; padding:6px 12px;" onclick="openQuizModalForCard(${idx})">✍️ ഹാൻഡ്‌റൈറ്റിംഗ് വരയ്ക്കുക</button>
+                <div class="audio-controls">
+                    <button type="button" class="mic-btn" id="card_mic_${idx}" onclick="toggleCardMic(${idx})"><i class="fa-solid fa-microphone"></i></button>
+                    <span class="audio-status" id="card_status_${idx}">${word.audioBlob ? '✅ ശബ്ദം റെക്കോർഡ് ചെയ്യപ്പെട്ടിട്ടുണ്ട്' : '⚪ ശബ്ദം റെക്കോർഡ് ചെയ്തിട്ടില്ല'}</span>
+                </div>
+            </div>`;
+        container.appendChild(card);
+    });
+}
+function addNewEmptyWordCard() { currentPageWords.push({ malayalam: '', arabic: '', audioBlob: null, writingPaths: null, coords: { left: 0, top: 0, width: 15, height: 6 } }); renderWordCards(); }
+function deleteWordCard(idx) { currentPageWords.splice(idx, 1); renderWordCards(); }
+
+function toggleCardMic(idx) {
+    let btn = document.getElementById(`card_mic_${idx}`); let status = document.getElementById(`card_status_${idx}`);
+    if (mediaRecorders[`c_${idx}`] && mediaRecorders[`c_${idx}`].state === "recording") {
+        mediaRecorders[`c_${idx}`].stop(); btn.classList.remove('recording'); btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+    } else {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            let mr = new MediaRecorder(stream); mediaRecorders[`c_${idx}`] = mr; let chunks = [];
+            mr.ondataavailable = e => chunks.push(e.data);
+            mr.onstop = () => { currentPageWords[idx].audioBlob = new Blob(chunks, { type: 'audio/mp3' }); status.innerText = '✅ ശബ്ദം റെക്കോർഡ് ചെയ്യപ്പെട്ടിട്ടുണ്ട്'; };
+            mr.start(); btn.classList.add('recording'); btn.innerHTML = '<i class="fa-solid fa-stop"></i>'; status.innerText = '🔴 റെക്കോർഡിങ്...';
+        }).catch(e => alert("മൈക്ക് പെർമിഷൻ ലഭ്യമാക്കുക!"));
+    }
+}
+
+function openQuizModalForCard(idx) { activeCardIndexForHandwriting = idx; document.getElementById('quizModal').style.display = 'flex'; clearQuizDrawBoard(); if(currentPageWords[idx].writingPaths) { quizPaths = JSON.parse(JSON.stringify(currentPageWords[idx].writingPaths)); redrawQuizPaths(); } }
+function closeQuizModal() { document.getElementById('quizModal').style.display = 'none'; }
+function clearQuizDrawBoard() { document.getElementById('quizDrawBoard').innerHTML = ""; quizPaths = []; }
+function initQuizDrawingEngine() {
+    let qboard = document.getElementById('quizDrawBoard');
+    function getCoords(e) { const rect = qboard.getBoundingClientRect(); let clientX = e.clientX ?? e.touches?.[0]?.clientX ?? 0; let clientY = e.clientY ?? e.touches?.[0]?.clientY ?? 0; return { x: Math.round(((clientX - rect.left) / rect.width) * 1000), y: Math.round(((clientY - rect.top) / rect.height) * 1000) }; }
+    function start(e) { e.preventDefault(); isQuizDrawing = true; const c = getCoords(e); const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); for(let i=0; i<16; i++) { let p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("transform", `translate(${(i-8)*0.4}, ${-(i-8)})`); p.setAttribute("stroke", "#e74c3c"); p.setAttribute("stroke-width", "2"); p.setAttribute("fill", "none"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("d", `M ${c.x} ${c.y}`); g.appendChild(p); } qboard.appendChild(g); quizPaths.push([{x: c.x, y: c.y}]); }
+    function move(e) { if(!isQuizDrawing) return; e.preventDefault(); const c = getCoords(e); const g = qboard.lastElementChild; if(!g) return; g.querySelectorAll("path").forEach(p => p.setAttribute("d", p.getAttribute("d") + ` L ${c.x} ${c.y}`)); quizPaths[quizPaths.length - 1].push({x: c.x, y: c.y} }); }
+    qboard.addEventListener("mousedown", start); qboard.addEventListener("mousemove", move); window.addEventListener("mouseup", () => isQuizDrawing = false);
+    qboard.addEventListener("touchstart", start, {passive:false}); qboard.addEventListener("touchmove", move, {passive:false}); window.addEventListener("touchend", () => isQuizDrawing = false);
+}
+function saveQuizDrawing() { currentPageWords[activeCardIndexForHandwriting].writingPaths = JSON.parse(JSON.stringify(quizPaths)); closeQuizModal(); }
+function redrawQuizPaths() {
+    let qboard = document.getElementById('quizDrawBoard'); qboard.innerHTML = "";
+    quizPaths.forEach(path => { const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); for(let i=0; i<16; i++) { let p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("transform", `translate(${(i-8)*0.4}, ${-(i-8)})`); p.setAttribute("stroke", "#e74c3c"); p.setAttribute("stroke-width", "2"); p.setAttribute("fill", "none"); p.setAttribute("stroke-linecap", "round"); let dStr = `M ${path[0].x} ${path[0].y}`; for(let pt=1; pt<path.length; pt++) { dStr += ` L ${path[pt].x} ${path[pt].y}`; } p.setAttribute("d", dStr); g.appendChild(p); } qboard.appendChild(g); });
+}
+
+function addNextPageToMemory() {
+    let lesson = parseInt(document.getElementById('lessonNum').value);
+    if(!selectedImageFile || currentPageWords.length === 0) return alert("ചിത്രവും വാക്ക് വിവരങ്ങളും പൂർണ്ണമായി നൽകുക!");
+    let zonesArray = [], blobsArray = [];
+    currentPageWords.forEach((w, idx) => { blobsArray.push(w.audioBlob); zonesArray.push({ coords: w.coords, text: w.arabic, malayalamText: w.malayalam, localAudioIndex: idx, writingPaths: w.writingPaths }); });
+    allPagesMemory.push({ isNewPage: true, imageFile: selectedImageFile, lesson: lesson, zones: zonesArray, audioBlobs: blobsArray, readingPaths: readingPaths.length > 0 ? readingPaths : null, hidden: false });
+    alert("Page Saved into Memory!"); document.getElementById('mappingSection').style.display = 'none'; document.getElementById('imageUploader').value = '';
+}
+
+/* ==================== 📝 ടാബ് 2: ക്വിസ്സ് റൂം ഫങ്ക്ഷനുകൾ ==================== */
+function addQuizRow(q='', c='', w1='', w2='', qS='', cS='', w1S='', w2S='') {
+    quizCount++; let id = quizCount; let div = document.createElement('div'); div.className = 'card'; div.id = `quiz_${id}`;
+    div.innerHTML = `
+        <div class="card-header"><div class="card-title">🎯 ചോദ്യം ബോക്സ്</div><button class="btn btn-danger-light" style="padding:4px 8px;" onclick="document.getElementById('quiz_${id}').remove()">🗑️ Delete</button></div>
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="form-group"><label>ചോദ്യം:</label><input type="text" class="q-txt" value="${q}"><div class="audio-controls"><button class="mic-btn" id="q_mic_q_${id}" onclick="toggleQuizMic(${id},'q')"><i class="fa-solid fa-microphone"></i></button><span class="audio-status" id="q_status_q_${id}" data-src="${qS}">${qS ? '✅ പഴയ വോയ്സ് ഉണ്ട്':'⚪ വോയ്സ് ഇല്ല'}</span></div></div>
+                <div class="form-group"><label style="color:var(--success)">ശരിയുത്തരം:</label><input type="text" class="q-correct" value="${c}"><div class="audio-controls"><button class="mic-btn" style="background:var(--success)" id="q_mic_c_${id}" onclick="toggleQuizMic(${id},'c')"><i class="fa-solid fa-microphone"></i></button><span class="audio-status" id="q_status_c_${id}" data-src="${cS}">${cS ? '✅ പഴയ വോയ്സ് ഉണ്ട്':'⚪ വോയ്സ് ഇല്ല'}</span></div></div>
+                <div class="form-group"><label style="color:var(--danger)">തെറ്റായ ഉത്തരം 1:</label><input type="text" class="q-w1" value="${w1}"><div class="audio-controls"><button class="mic-btn" id="q_mic_w1_${id}" onclick="toggleQuizMic(${id},'w1')"><i class="fa-solid fa-microphone"></i></button><span class="audio-status" id="q_status_w1_${id}" data-src="${w1S}">${w1S ? '✅ പഴയ വോയ്സ് ഉണ്ട്':'⚪ വോയ്സ് ഇല്ല'}</span></div></div>
+                <div class="form-group"><label style="color:var(--danger)">തെറ്റായ ഉത്തരം 2:</label><input type="text" class="q-w2" value="${w2}"><div class="audio-controls"><button class="mic-btn" id="q_mic_w2_${id}" onclick="toggleQuizMic(${id},'w2')"><i class="fa-solid fa-microphone"></i></button><span class="audio-status" id="q_status_w2_${id}" data-src="${w2S}">${w2S ? '✅ പഴയ വോയ്സ് ഉണ്ട്':'⚪ വോയ്സ് ഇല്ല'}</span></div></div>
+            </div>
+        </div>`;
+    document.getElementById('quizFormArea').appendChild(div);
+}
+
+function toggleQuizMic(id, type) {
+    let btn = document.getElementById(`q_mic_${type}_${id}`); let status = document.getElementById(`q_status_${type}_${id}`);
+    if (mediaRecorders[`q_${id}_${type}`] && mediaRecorders[`q_${id}_${type}`].state === "recording") {
+        mediaRecorders[`q_${id}_${type}`].stop(); btn.classList.remove('recording'); btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+    } else {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            let mr = new MediaRecorder(stream); mediaRecorders[`q_${id}_${type}`] = mr; let chunks = [];
+            mr.ondataavailable = e => chunks.push(e.data);
+            mr.onstop = () => { if(!tempAudioBlobs[`q_${id}`]) tempAudioBlobs[`q_${id}`] = {}; tempAudioBlobs[`q_${id}`][type] = new Blob(chunks, { type: 'audio/mp3' }); status.innerText = '✅ റെക്കോർഡ് ചെയ്തു'; status.setAttribute('data-src', ''); };
+            mr.start(); btn.classList.add('recording'); btn.innerHTML = '<i class="fa-solid fa-stop"></i>'; status.innerText = '🔴...';
+        }).catch(e => alert("മൈക്ക് പെർമിഷൻ ലഭ്യമാക്കുക!"));
+    }
+}
+
+/* ==================== 📁 ടാബ് 3: ഓട്ടോ ഫോൾഡർ അഡ്മിൻ ഫങ്ക്ഷനുകൾ ==================== */
+function addMadrassaField(name = '', meta = '', students = '') {
+    madrassaCount++; let id = madrassaCount; let div = document.createElement('div'); div.className = 'card madrassa-card'; div.id = `madrassa_${id}`;
+    div.innerHTML = `
+        <div class="card-header"><div class="card-title"><i class="fa-solid fa-place-of-worship"></i> മദ്രസ വിവരങ്ങൾ</div><button class="btn btn-danger-light" style="padding: 5px 10px; font-size: 12px;" onclick="document.getElementById('madrassa_${id}').remove()"><i class="fa-solid fa-trash"></i> Remove</button></div>
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: span 2;"><label>മദ്രസയുടെ പേര്:</label><input type="text" class="m-name" value="${name}" placeholder="മദ്രസയുടെ പേര്"></div>
+                <div class="form-group"><label>ക്ലാസ്സ് / വിഷയം:</label><input type="text" class="m-meta" value="${meta}" placeholder="ഉദാ: ക്ലാസ്സ് 2"></div>
+                <div class="form-group form-group-full"><label>കുട്ടികളുടെ പേരുകൾ (കോമയിട്ട് നൽകുക):</label><textarea class="m-students" placeholder="ഉദാ: അൽത്താഫ്, ഫാത്തിമ">${students}</textarea></div>
+            </div>
+        </div>`;
+    document.getElementById('madrassaArea').appendChild(div);
+}
+
+function addWordRow(mal = '', arbi = '', existingAudioName = '') {
+    wordCount++; let id = wordCount; let div = document.createElement('div'); div.className = 'card word-card'; div.id = `word_${id}`;
+    let isConfirmed = existingAudioName ? "true" : "false";
+    div.innerHTML = `
+        <div class="card-header"><div class="card-title"><i class="fa-solid fa-language"></i> വാക്ക് വിവരങ്ങൾ</div><button class="btn btn-danger-light" style="padding: 5px 10px; font-size: 12px;" onclick="document.getElementById('word_${id}').remove()"><i class="fa-solid fa-trash"></i> Delete</button></div>
+        <div class="card-body" data-confirmed="${isConfirmed}">
+            <div class="form-grid">
+                <div class="form-group"><label>മലയാളം വാക്ക്:</label><input type="text" id="mal_${id}" class="w-mal" value="${mal}" placeholder="മലയാളം വാക്ക്" oninput="handleAutoConvert(${id})"></div>
+                <div class="form-group"><label>അറബി മലയാളം വാക്ക്:</label><input type="text" id="arbi_${id}" class="w-arbi arabic-input" value="${arbi}" placeholder="مَلَيٰۻَمْ"></div>
+            </div>
+            <div class="audio-controls">
+                <button class="mic-btn" id="mic_${id}" onclick="toggleMic(${id})" title="റെക്കോർഡ് ചെയ്യുക"><i class="fa-solid fa-microphone"></i></button>
+                <button class="preview-btn" id="preview_${id}" onclick="previewTempAudio(${id})" title="കേട്ടുനോക്കുക"><i class="fa-solid fa-play"></i> കേട്ടുനോക്കൂ</button>
+                <button class="confirm-btn" id="confirm_${id}" onclick="confirmAudio(${id})" title="ഉറപ്പിക്കുക"><i class="fa-solid fa-check"></i> OK ആണ്</button>
+                <span class="audio-status" id="status_${id}" style="color:${existingAudioName ? '#10b981' : '#4b5563'};" data-audio="${existingAudioName}">
+                    ${existingAudioName ? '<i class="fa-solid fa-circle-check"></i> പഴയ ശബ്ദം സുരക്ഷിതമാണ്' : '<i class="fa-solid fa-circle-xmark"></i> ശബ്ദം റെക്കോർഡ് ചെയ്തിട്ടില്ല'}
+                </span>
+            </div>
+        </div>`;
+    document.getElementById('wordsArea').appendChild(div);
+}
+
+function toggleMic(id) {
+    let btn = document.getElementById(`mic_${id}`); let status = document.getElementById(`status_${id}`);
+    let prevBtn = document.getElementById(`preview_${id}`); let confBtn = document.getElementById(`confirm_${id}`);
+    let cardBody = document.querySelector(`#word_${id} .card-body`);
+    
+    if (mediaRecorders[id] && mediaRecorders[id].state === "recording") {
+        mediaRecorders[id].stop(); btn.classList.remove('recording'); btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+    } else {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            let mediaRecorder = new MediaRecorder(stream); mediaRecorders[id] = mediaRecorder; let chunks = [];
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                tempAudioBlobs[id] = new Blob(chunks, { type: 'audio/mp3' });
+                status.innerHTML = '⚠️ ശബ്ദം സേവ് ചെയ്തിട്ടില്ല! കേട്ടുനോക്കി കൺഫേം ചെയ്യുക.'; status.style.color = "#f59e0b";
+                prevBtn.style.display = "inline-flex"; confBtn.style.display = "inline-flex"; cardBody.setAttribute('data-confirmed', 'false');
+            };
+            mediaRecorder.start(); btn.classList.add('recording'); btn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+            status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> റെക്കോർഡിങ്...'; status.style.color = "#ef4444";
+            prevBtn.style.display = "none"; confBtn.style.display = "none";
+        }).catch(e => alert("മൈക്ക് പെർമിഷൻ തരണം!"));
+    }
+}
+function previewTempAudio(id) { if (tempAudioBlobs[id]) { (new Audio(URL.createObjectURL(tempAudioBlobs[id]))).play(); } }
+function confirmAudio(id) { if (tempAudioBlobs[id]) { audioBlobs[id] = tempAudioBlobs[id]; let status = document.getElementById(`status_${id}`); status.innerHTML = '<i class="fa-solid fa-circle-check"></i> ശബ്ദം ഉറപ്പിച്ചു!'; status.style.color = "#10b981"; document.getElementById(`preview_${id}`).style.display = "none"; document.getElementById(`confirm_${id}`).style.display = "none"; document.querySelector(`#word_${id} .card-body`).setAttribute('data-confirmed', 'true'); } }
+
+async function generateMasterZip() {
+    let zip = new JSZip(); let dataFolder = zip.folder("data");
+    let madrassaNodes = document.querySelectorAll('.madrassa-card'); let wordNodes = document.querySelectorAll('.word-card');
+    let masterConfig = { madrassas: [], words: [] };
+    
+    madrassaNodes.forEach(node => {
+        let name = node.querySelector('.m-name').value.trim(); let meta = node.querySelector('.m-meta').value.trim();
+        let studentsArr = node.querySelector('.m-students').value.split(',').map(s=>s.trim()).filter(s=>s!=="");
+        if(name && studentsArr.length > 0) masterConfig.madrassas.push({ name: name, metaInfo: meta, students: studentsArr });
+    });
+    
+    wordNodes.forEach(node => {
+        let id = node.id.split('_')[1]; let mal = node.querySelector('.w-mal').value.trim(); let arbi = node.querySelector('.w-arbi').value.trim();
+        let oldAudioName = document.getElementById(`status_${id}`).getAttribute('data-audio');
+        if(mal && arbi) {
+            let audioName = oldAudioName ? oldAudioName : `audio_${id}_${Date.now()}.mp3`;
+            masterConfig.words.push({ mal: mal, arbiText: arbi, audio: audioName });
+            if(audioBlobs[id]) dataFolder.file(audioName, audioBlobs[id]); else if(oldAudioName && importedAudioFiles[oldAudioName]) dataFolder.file(audioName, importedAudioFiles[oldAudioName]);
+        }
+    });
+    dataFolder.file("data.json", JSON.stringify(masterConfig, null, 4));
+    zip.generateAsync({type:"blob"}).then(c => { let l = document.createElement("a"); l.href = URL.createObjectURL(c); l.download = "master_package.zip"; l.click(); });
+}
+
+/* ==================== 🚀 GITHUB DIRECT DIRECT PUBLISH ENGINE ==================== */
+function blobToBase64(blob) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onloadend = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; reader.readAsDataURL(blob); }); }
+async function uploadToGitHubAPI(path, blobData, token) {
+    const url = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${path}`; const base64Content = await blobToBase64(blobData); let sha = null;
+    try { let checkRes = await fetch(url, { headers: { "Authorization": `token ${token}` } }); if(checkRes.ok) { let checkData = await checkRes.json(); sha = checkData.sha; } } catch(e) {}
+    let bodyObj = { message: `Automated Multi-Tab Update: ${path}`, content: base64Content, branch: GH_BRANCH }; if(sha) bodyObj.sha = sha;
+    let res = await fetch(url, { method: "PUT", headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(bodyObj) });
+    if(!res.ok) { let errText = await res.text(); throw new Error(`GitHub Upload Failed: ${errText}`); }
+}
+
+async function publishToGitHubDirectly() {
+    let token = document.getElementById('ghToken').value.trim(); if(!token) return alert("ദയവായി GitHub ടോക്കൺ നൽകുക!");
+    const overlay = document.getElementById('loadingOverlay'); overlay.style.display = 'flex';
+    try {
+        // 1. പുസ്തകം ഡാറ്റ പ്രോസസിങ് (Tab 1)
+        let pagesJsonArray = [];
+        for(let p = 0; p < allPagesMemory.length; p++) {
+            let pageItem = allPagesMemory[p]; let zipImgName = "";
+            if(pageItem.isNewPage) { zipImgName = `page_${Date.now()}_${p}_image.jpg`; document.getElementById('loadText').innerText = `📸 പുതിയ പേജ് ${p+1} അപ്‌ലോഡ് ചെയ്യുന്നു...`; await uploadToGitHubAPI(`data/${zipImgName}`, pageItem.imageFile, token); } else { zipImgName = pageItem.image.split('/').pop().split('?')[0]; }
+            let updatedZones = [];
+            for(let z = 0; z < pageItem.zones.length; z++) {
+                let zoneItem = pageItem.zones[z]; let zipAudioName = zoneItem.audioSrc;
+                if(pageItem.isNewPage) { zipAudioName = `data/audio_${Date.now()}_p${p}_z${z}.mp3`; document.getElementById('loadText').innerText = `🎙️ പേജ് ${p+1} - ഓഡിയോ ${z+1} അപ്‌ലോഡ് ചെയ്യുന്നു...`; await uploadToGitHubAPI(zipAudioName, pageItem.audioBlobs[zoneItem.localAudioIndex], token); }
+                updatedZones.push({ coords: zoneItem.coords, text: zoneItem.text, malayalamText: zoneItem.malayalamText, audioSrc: zipAudioName, writingPaths: zoneItem.writingPaths });
+            }
+            pagesJsonArray.push({ image: `data/${zipImgName}`, lesson: pageItem.lesson, zones: updatedZones, readingPaths: pageItem.readingPaths, hidden: pageItem.hidden });
+        }
+        document.getElementById('loadText').innerText = "📖 പാഠപുസ്തക ഡാറ്റാബേസ് അപ്ഡേറ്റ് ചെയ്യുന്നു...";
+        await uploadToGitHubAPI("data/data_book.json", new Blob([JSON.stringify({ version: Date.now(), pages: pagesJsonArray }, null, 2)], {type: "application/json"}), token);
+
+        // 2. ക്വിസ്സ് ഡാറ്റ പ്രോസസിങ് (Tab 2)
+        let quizNodes = document.querySelectorAll('#quizFormArea .card'); let quizJsonArray = [];
+        for(let i=0; i<quizNodes.length; i++) {
+            let n = quizNodes[i]; let qId = n.id.split('_')[1];
+            let qText = n.querySelector('.q-txt').value.trim(); let correctText = n.querySelector('.q-correct').value.trim();
+            let wrong1Text = n.querySelector('.q-w1').value.trim(); let wrong2Text = n.querySelector('.q-w2').value.trim();
+            let audioUrls = {};
+            let types = ['q', 'c', 'w1', 'w2'];
+            for(let t of types) {
+                let oldSrc = document.getElementById(`q_status_${t}_${qId}`).getAttribute('data-src');
+                if(!oldSrc && tempAudioBlobs[`q_${qId}`]?.[t]) {
+                    let fName = `data/quiz_${Date.now()}_q${qId}_${t}.mp3`;
+                    document.getElementById('loadText').innerText = `🎙️ ക്വിസ്സ് ഓഡിയോ അപ്‌ലോഡ് ചെയ്യുന്നു...`;
+                    await uploadToGitHubAPI(fName, tempAudioBlobs[`q_${qId}`][t], token); oldSrc = fName;
+                }
+                audioUrls[t] = oldSrc || '';
+            }
+            if(qText) quizJsonArray.push({ qText: qText, correctText: correctText, wrong1Text: wrong1Text, wrong2Text: wrong2Text, qSrc: audioUrls.q, correctSrc: audioUrls.c, wrong1Src: audioUrls.w1, wrong2Src: audioUrls.w2 });
+        }
+        let quizInfoObj = { class: document.getElementById('quizClass').value, subject: document.getElementById('quizSubject').value, part: document.getElementById('quizPart').value, chapter: document.getElementById('quizChapter').value, lessonName: document.getElementById('quizLessonName').value };
+        await uploadToGitHubAPI("data/quiz_data.json", new Blob([JSON.stringify({ version: Date.now(), quizInfo: quizInfoObj, questions: quizJsonArray }, null, 2)], {type: "application/json"}), token);
+
+        overlay.style.display = 'none'; alert("🎉 എല്ലാം വിജയകരമായി പബ്ലിഷ് ചെയ്യപ്പെട്ടു!"); window.location.reload();
+    } catch(e) { overlay.style.display = 'none'; alert("❌ അപ്‌ലോഡ് പരാജയപ്പെട്ടു: " + e.message); }
+}
+</script>
+</body>
+</html>
