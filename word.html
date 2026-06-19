@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>സൂപ്പർ വേർഡ് ചലഞ്ച്</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS കോഡുകൾ മുകളിൽ നൽകിയ അതേ സ്റ്റൈൽ തന്നെ ഉപയോഗിക്കാം */
+        :root { --primary: #1e3a8a; --success: #10b981; --danger: #ef4444; --bg: #f0f4f8; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        .game-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; text-align: center; }
+        .master-speaker-btn { background: #3b82f6; color: white; width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; }
+        .letter-block { display: inline-block; padding: 10px 15px; margin: 5px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 20px; font-family: 'Amiri', serif; }
+        .wrong { background: #fee2e2; border-color: red; }
+        .disabled { opacity: 0.3; }
+        .arabic-text-output { font-size: 32px; color: #047857; min-height: 50px; margin: 20px 0; }
+        .selection-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header style="text-align:center; padding:15px; background:var(--primary); color:white; border-radius:12px; margin-bottom:15px;">
+        <h1><i class="fa-solid fa-brain"></i> വേർഡ് ചലഞ്ച്</h1>
+    </header>
+
+    <div class="selection-box" id="setupBox">
+        <label>മദ്രസ:</label>
+        <select id="madrassaSelect" onchange="updateStudentsDropdown()"><option value="">-- തിരഞ്ഞെടുക്കുക --</option></select>
+        <label style="margin-top:10px; display:block;">കുട്ടി:</label>
+        <select id="studentSelect" onchange="startGame()"><option value="">-- പേര് തിരഞ്ഞെടുക്കുക --</option></select>
+    </div>
+
+    <div class="game-container" id="gameZone">
+        <button class="master-speaker-btn" id="speakerBtn" onclick="playCurrentWordAudio()"><i class="fa-solid fa-volume-high"></i></button>
+        <div id="malWordDisplay" style="font-size:20px; font-weight:bold; margin:15px 0;">---</div>
+        <div class="arabic-text-output" id="arabicOutput"></div>
+        <div class="letters-pool" id="lettersPool"></div>
+    </div>
+</div>
+
+<script>
+    let appData = { madrassas: [], words: [] };
+    let currentWordIndex = 0;
+    let currentTypedLetters = [];
+    let targetLettersSequence = [];
+
+    // ഡാറ്റ ലോഡ് ചെയ്യുന്നു
+    fetch('data/data.json?t=' + Date.now())
+        .then(res => res.json())
+        .then(data => {
+            appData = data;
+            let select = document.getElementById("madrassaSelect");
+            appData.madrassas.forEach((m, i) => {
+                let opt = document.createElement("option"); opt.value = i; opt.textContent = m.name;
+                select.appendChild(opt);
+            });
+        });
+
+    function updateStudentsDropdown() {
+        let mIndex = document.getElementById("madrassaSelect").value;
+        let sSelect = document.getElementById("studentSelect");
+        sSelect.innerHTML = '<option value="">-- പേര് തിരഞ്ഞെടുക്കുക --</option>';
+        if(mIndex !== "") {
+            appData.madrassas[mIndex].students.forEach(s => {
+                let opt = document.createElement("option"); opt.value = s; opt.textContent = s;
+                sSelect.appendChild(opt);
+            });
+        }
+    }
+
+    function startGame() {
+        if(document.getElementById("studentSelect").value) {
+            document.getElementById("gameZone").style.display = "block";
+            currentWordIndex = 0;
+            loadWordLevel();
+        }
+    }
+
+    function splitArabicWord(word) { return word.match(/[\u0600-\u06ff][\u064b-\u065f]*/g) || []; }
+
+    function loadWordLevel() {
+        let obj = appData.words[currentWordIndex];
+        document.getElementById("malWordDisplay").textContent = obj.mal;
+        document.getElementById("arabicOutput").textContent = "";
+        currentTypedLetters = [];
+        targetLettersSequence = splitArabicWord(obj.arbiText);
+        
+        let pool = document.getElementById("lettersPool");
+        pool.innerHTML = "";
+        targetLettersSequence.slice().sort(() => Math.random() - 0.5).forEach((l, i) => {
+            let b = document.createElement("div"); b.className = "letter-block"; b.textContent = l;
+            b.onclick = () => {
+                if (l === targetLettersSequence[currentTypedLetters.length]) {
+                    currentTypedLetters.push(l);
+                    document.getElementById("arabicOutput").textContent = currentTypedLetters.join("");
+                    b.classList.add("disabled");
+                    if (currentTypedLetters.length === targetLettersSequence.length) {
+                        currentWordIndex++;
+                        if(currentWordIndex < appData.words.length) loadWordLevel();
+                        else alert("ചലഞ്ച് പൂർത്തിയായി!");
+                    }
+                } else {
+                    alert("തെറ്റായിപ്പോയി! ആദ്യം മുതൽ തുടങ്ങുക.");
+                    currentWordIndex = 0; loadWordLevel();
+                }
+            };
+            pool.appendChild(b);
+        });
+    }
+
+    function playCurrentWordAudio() {
+        new Audio('data/' + appData.words[currentWordIndex].audio).play();
+    }
+</script>
+</body>
+</html>
