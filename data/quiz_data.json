@@ -1,5 +1,5 @@
 {
-  "version": 1781847394372,
+  "version": 1781868325458,
   "quizInfo": {
     "class": "",
     "subject": "",
@@ -17,6 +17,16 @@
       "correctSrc": "data/quiz_1781770940926_q0_correct.mp4",
       "wrong1Src": "data/quiz_1781770943005_q0_wrong1.mp4",
       "wrong2Src": "data/quiz_1781770945012_q0_wrong2.mp4"
+    },
+    {
+      "qText": "മുഹമ്മദ്‌ നബി ജനിച്ചത് എവിടെ",
+      "correctText": "മക്കയിൽ",
+      "wrong1Text": "മദീനയിൽ",
+      "wrong2Text": "ഇന്ത്യയിൽ",
+      "qSrc": "data/quiz_1781868316087_q1_q.mp4",
+      "correctSrc": "data/quiz_1781868318566_q1_correct.mp4",
+      "wrong1Src": "data/quiz_1781868321128_q1_wrong1.mp4",
+      "wrong2Src": "data/quiz_1781868323287_q1_wrong2.mp4"
     }
   ]
 }
