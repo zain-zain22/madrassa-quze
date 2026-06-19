@@ -1,0 +1,18 @@
+{
+    "madrassas": [
+        {
+            "name": "ഇൽഫത്തുൽ ഇസ്ലാം",
+            "metaInfo": "Class Info",
+            "students": [
+                "Zain"
+            ]
+        }
+    ],
+    "words": [
+        {
+            "mal": "മലയാളം",
+            "arbiText": "مَلَیَاۻمٛ",
+            "audio": "audio_live_1781847372743_r1.mp3"
+        }
+    ]
+}
