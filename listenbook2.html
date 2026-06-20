@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ഡിജിറ്റൽ സൗണ്ട് ബുക്ക് - പ്രോ സ്റ്റുഡന്റ് പാനൽ</title>
     
-    <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -108,25 +107,27 @@
         .controls-bar { width: 100%; max-width: 600px; display: flex; gap: 12px; margin-top: 10px; }
         .btn-half { flex: 1; }
 
-        /* പുതിയ ലക്ഷ്വറി സർട്ടിഫിക്കറ്റ് ഡിസൈൻ */
+        /* പുതിയ ലക്ഷ്വറി വിജയ സർട്ടിഫിക്കറ്റ് ഡിസൈൻ */
         .certificate-card {
-            background: #fff; border: 12px solid #1d3557; padding: 30px 20px;
-            max-width: 500px; width: 100%; border-radius: 15px; text-align: center;
-            position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            background: #fff; border: 15px solid #1d3557; padding: 35px 25px;
+            max-width: 550px; width: 100%; border-radius: 12px; text-align: center;
+            position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            background-image: linear-gradient(45deg, #fdfbf7 25%, transparent 25%), linear-gradient(-45deg, #fdfbf7 25%, transparent 25%);
+            background-size: 20px 20px;
         }
         .certificate-card::after {
             content: ''; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
-            border: 2px dashed var(--gold-color); pointer-events: none; border-radius: 8px;
+            border: 2px dashed var(--gold-color); pointer-events: none; border-radius: 6px;
         }
-        .cert-title { font-size: 30px; color: #1d3557; font-weight: 700; margin-bottom: 2px; }
-        .cert-sub { font-size: 13px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
-        .cert-name { font-size: 26px; color: var(--purple-color); border-bottom: 2px solid #e9ecef; display: inline-block; padding: 5px 25px; margin: 15px 0 5px 0; font-weight: 700; }
+        .cert-title { font-size: 32px; color: #1d3557; font-weight: 700; margin-bottom: 2px; }
+        .cert-sub { font-size: 14px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
+        .cert-name { font-size: 28px; color: var(--purple-color); border-bottom: 2px solid #e9ecef; display: inline-block; padding: 5px 25px; margin: 15px 0 5px 0; font-weight: 700; }
         
         /* കൂടുതൽ വിവരങ്ങൾ കാണിക്കാനുള്ള ടേബിൾ സ്റ്റൈൽ */
         .cert-details-table {
-            width: 90%; margin: 15px auto; border-collapse: collapse; font-size: 14px; text-align: left; background: #f8f9fa; border-radius: 8px; overflow: hidden;
+            width: 95%; margin: 15px auto; border-collapse: collapse; font-size: 14px; text-align: left; background: #f8f9fa; border-radius: 8px; overflow: hidden;
         }
-        .cert-details-table td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+        .cert-details-table td { padding: 9px 12px; border-bottom: 1px solid #eee; color: #333; }
         .cert-details-table td:first-child { font-weight: bold; color: #1d3557; width: 45%; }
         
         .whatsapp-alert {
@@ -156,7 +157,6 @@
         <div class="loading-text">പാഠപുസ്തക വിവരങ്ങൾ ശേഖരിക്കുന്നു...</div>
     </div>
 
-    <!-- ലോഗിൻ സ്‌ക്രീൻ -->
     <div id="loginScreen" class="screen active-screen">
         <div class="menu-box" style="border-top: 6px solid var(--primary-color);">
             <h1>📖 ഡിജിറ്റൽ സൗണ്ട് ബുക്ക്</h1>
@@ -172,7 +172,6 @@
         </div>
     </div>
 
-    <!-- മെയിൻ മെനു സ്‌ക്രീൻ -->
     <div id="mainMenuScreen" class="screen">
         <div class="menu-box" style="border-top: 6px solid var(--success-color);">
             <h2 id="welcomeText">ഹലോ</h2>
@@ -184,13 +183,15 @@
             <button id="btnMenuQuiz" class="btn-lock" onclick="goToQuizLink()" disabled>
                 <i class="fa-solid fa-gamepad"></i> ക്വിസ്സ് ഗെയിം (Lock 🔒)
             </button>
+            <button id="btnMenuCert" class="btn-lock" onclick="showCertificateScreen()" disabled>
+                <i class="fa-solid fa-award"></i> സർട്ടിഫിക്കറ്റ് കാണുക (Lock 🔒)
+            </button>
             <button class="btn-secondary" style="margin-top:20px; font-size:14px; padding:12px;" onclick="showScreen('loginScreen')">
                 <i class="fa-solid fa-arrow-left"></i> പ്രൊഫൈൽ മാറ്റുക
             </button>
         </div>
     </div>
 
-    <!-- റിവിഷൻ സ്‌ക്രീൻ -->
     <div id="revisionScreen" class="screen">
         <div class="book-header">
             <h2 style="margin: 0; color:#1d3557; font-size: 18px;"><i class="fa-solid fa-graduation-cap"></i> റീഡിങ് ടൈം</h2>
@@ -209,7 +210,7 @@
         
         <div class="controls-bar">
             <button id="prevWordBtn" class="btn-secondary btn-half" onclick="stepToPreviousWord()">
-                <i class="fa-solid fa-arrow-left"></i> പുറകോっと
+                <i class="fa-solid fa-arrow-left"></i> പുറകോട്ട്
             </button>
             <button id="nextWordBtn" class="btn-green btn-half" onclick="stepToNextWord()">
                 മനസ്സിലായി! <i class="fa-solid fa-arrow-right"></i>
@@ -229,9 +230,8 @@
         </div>
     </div>
 
-    <!-- വിജയ സർട്ടിഫിക്കറ്റ് സ്‌ക്രീൻ (പുതുക്കിയത്) -->
     <div id="certificateScreen" class="screen">
-        <div class="certificate-card" id="captureArea">
+        <div class="certificate-card">
             <i class="fa-solid fa-trophy" style="font-size: 55px; color: var(--gold-color); margin-bottom: 10px;"></i>
             <div class="cert-title">അഭിനന്ദനങ്ങൾ!</div>
             <div class="cert-sub">വിജയ സർട്ടിഫിക്കറ്റ്</div>
@@ -239,7 +239,6 @@
             <div class="cert-name" id="certStudentName">കുട്ടിയുടെ പേര്</div>
             <p style="font-size:14px; margin: 5px 0; color: #2e7d32; font-weight: bold;">ഇന്നത്തെ റിവിഷൻ വിജയകരമായി പൂർത്തിയാക്കിയിരിക്കുന്നു! 👏</p>
             
-            <!-- പുതിയ വിവരങ്ങൾ അടങ്ങിയ ടേബിൾ -->
             <table class="cert-details-table">
                 <tr><td><i class="fa-solid fa-graduation-cap"></i> ക്ലാസ്സ്:</td><td id="certClass">--</td></tr>
                 <tr><td><i class="fa-solid fa-book"></i> വിഷയം:</td><td id="certSubject">--</td></tr>
@@ -255,7 +254,7 @@
             </div>
         </div>
         
-        <div style="width:100%; max-width:500px; margin-top:20px;">
+        <div style="width:100%; max-width:550px; margin-top:20px;">
             <button class="btn-purple" onclick="goToQuizLink()"><i class="fa-solid fa-gamepad"></i> ഇനി ക്വിസ്സ് ഗെയിം കളിക്കാം 🚀</button>
             <button class="btn-secondary" onclick="showScreen('mainMenuScreen')"><i class="fa-solid fa-home"></i> ഹോം മെനുവിലേക്ക്</button>
         </div>
@@ -330,10 +329,14 @@
         function updateMenuButtons() {
             let isUnlocked = localStorage.getItem(getTodayLockKey(currentStudent));
             let quizBtn = document.getElementById('btnMenuQuiz');
+            let certBtn = document.getElementById('btnMenuCert');
+
             if(isUnlocked === "true") {
                 if(quizBtn) { quizBtn.disabled = false; quizBtn.className = "btn-green"; quizBtn.innerHTML = `<i class="fa-solid fa-gamepad"></i> ക്വിസ്സ് ഗെയിം കളിക്കുക 🚀`; }
+                if(certBtn) { certBtn.disabled = false; certBtn.className = "btn-gold"; certBtn.innerHTML = `<i class="fa-solid fa-award"></i> സർട്ടിഫിക്കറ്റ് കാണുക 🏆`; }
             } else {
                 if(quizBtn) { quizBtn.disabled = true; quizBtn.className = "btn-lock"; quizBtn.innerHTML = `<i class="fa-solid fa-lock"></i> ക്വിസ്സ് ഗെയിം (Lock 🔒)`; }
+                if(certBtn) { certBtn.disabled = true; certBtn.className = "btn-lock"; certBtn.innerHTML = `<i class="fa-solid fa-lock"></i> സർട്ടിഫിക്കറ്റ് (Lock 🔒)`; }
             }
         }
 
@@ -466,6 +469,7 @@
             isWordAudioFinished = true; disableControlButtons(false);
         });
 
+        // നിങ്ങളുടെ hand.png നിർദ്ദേശങ്ങൾക്കനുസരിച്ച് മാറ്റിയ ആനിമേഷൻ സിസ്റ്റം
         function animateReadingPath(pathPoints) {
             if(!pathPoints || pathPoints.length === 0) return;
             let svg = document.getElementById('playbackEngine');
@@ -483,7 +487,7 @@
 
             let handImg = document.createElementNS("http://www.w3.org/2000/svg", "image");
             handImg.setAttributeNS("http://www.w3.org/1999/xlink", "href", "hand.png");
-            handImg.setAttribute("width", "140"); handImg.setAttribute("height", "1400");
+            handImg.setAttribute("width", "140"); handImg.setAttribute("height", "140");
             handImg.setAttribute("x", pathPoints[0].x - 33); handImg.setAttribute("y", pathPoints[0].y - 50);
             svg.appendChild(handImg);
 
@@ -512,35 +516,39 @@
                 
                 try { cheerSound.play(); } catch(e) {}
                 
-                // ഫൈനൽ സർട്ടിഫിക്കറ്റ് ലോഡ് ചെയ്യുകയും കാണിക്കുകയും ചെയ്യുന്നു
+                // റീഡിങ് കഴിഞ്ഞ ഉടൻ തനിയെ സർട്ടിഫിക്കറ്റ് ലോഡ് ചെയ്യുന്നു
                 generateAndShowCertificate();
             }
         }
 
-        // അവസാന പേജ് കഴിഞ്ഞ ഉടൻ സർട്ടിഫിക്കറ്റിലേക്ക് ആവശ്യമായ എല്ലാ വിവരങ്ങളും എടുക്കുന്ന ഫങ്ക്ഷൻ
+        // മെനുവിൽ നിന്നും നേരിട്ട് കാണാൻ ആവശ്യപ്പെടുമ്പോൾ
+        function showCertificateScreen() {
+            generateAndShowCertificate();
+        }
+
+        // സർട്ടിഫിക്കറ്റിലേക്ക് ആവശ്യമായ ഡാറ്റകൾ അപ്‌ഡേറ്റ് ചെയ്തു കാണിക്കുന്ന മെയിൻ ഫങ്ക്ഷൻ
         function generateAndShowCertificate() {
             let lastPage = revisionPagesList[revisionPagesList.length - 1] || {};
             
-            // വിദ്യാർത്ഥിയുടെ പേര്
             document.getElementById('certStudentName').innerText = currentStudent;
             
-            // JSON ഡാറ്റയിൽ നിന്നും പേജ് വിവരങ്ങൾ എടുക്കുന്നു (ഇല്ലെങ്കിൽ ഡിഫോൾട്ട് ആയി കാണിക്കും)
-            document.getElementById('certClass').innerText = lastPage.class || "മദ്രസ തരം";
-            document.getElementById('certSubject').innerText = lastPage.subject || "പാഠവിഷയം";
+            // പാഠപുസ്തക വിവരങ്ങൾ
+            document.getElementById('certClass').innerText = lastPage.class || "ലഭ്യമല്ല";
+            document.getElementById('certSubject').innerText = lastPage.subject || "ലഭ്യമല്ല";
             document.getElementById('certPart').innerText = lastPage.part || "ഭാഗം 1";
-            document.getElementById('certChapter').innerText = lastPage.chapter || "അദ്ധ്യായം 1";
-            document.getElementById('certLessonName').innerText = lastPage.lesson || "പാഠത്തിന്റെ പേര്";
+            document.getElementById('certChapter').innerText = lastPage.chapter || "ലഭ്യമല്ല";
+            document.getElementById('certLessonName').innerText = lastPage.lesson || "ലഭ്യമല്ല";
             
-            // തീയതിയും കൃത്യമായ സമയവും (Time) കണ്ടുപിടിക്കുന്നു
+            // തീയതിയും സമയവും കൃത്യമായി കണ്ടെത്തുന്നു
             let now = new Date();
             let hours = now.getHours();
             let minutes = now.getMinutes();
             let ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // 0 നെ 12 ആക്കുന്നു
-            minutes = minutes < 10 ? '0'+minutes : minutes;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
             let currentTimeString = `${hours}:${minutes} ${ampm}`;
-            let currentDateString = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+            let currentDateString = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
             
             document.getElementById('certTime').innerText = `${currentDateString} - ${currentTimeString}`;
             document.getElementById('certStars').innerText = `${earnedStars} Pts`;
