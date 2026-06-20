@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>വിദ്യാഭ്യാസ ഉള്ളടക്ക വികസന പാനൽ</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* മൊബൈലിൽ വാക്കുകൾ മാർജിന് പുറത്തേക്ക് പോകാതിരിക്കാൻ */
+        .word-wrap-fix {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">📚 Content Developer Panel</h1>
+            <div id="statusIndicator" class="text-sm bg-blue-700 px-3 py-1 rounded-full text-blue-100 flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></span> റെഡി
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
+                ⚙️ പൊതുവായ വിവരങ്ങൾ (സർട്ടിഫിക്കറ്റിനും ക്വിസ്സിനും ആവശ്യമായത്)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">ക്ലാസ്സ് (Class)</label>
+                    <input type="text" id="globalClass" placeholder="ഉദാ: Class 4" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">വിഷയം (Subject)</label>
+                    <input type="text" id="globalSubject" placeholder="ഉദാ: ഫിഖ്ഹ്" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">പാർട്ട് (Part)</label>
+                    <input type="text" id="globalPart" placeholder="ഉദാ: Part 1" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">പാഠം (Chapter)</label>
+                    <input type="text" id="globalChapter" placeholder="ഉദാ: പാഠം 1 : വുളൂഅ്" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
+                🚀 GitHub കോൺഫിഗറേഷൻ
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">GitHub Token</label>
+                    <input type="password" id="ghToken" placeholder="ghp_..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Repository Owner</label>
+                    <input type="text" id="ghOwner" placeholder="GitHub Username" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Repository Name</label>
+                    <input type="text" id="ghRepo" placeholder="Repo Name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="bg-gray-100 px-4 py-2 flex gap-2 border-b overflow-x-auto">
+                <button onclick="switchTab('madrassaTab')" id="btn-madrassaTab" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white shadow-sm">🏫 മദ്രസ & കുട്ടികൾ</button>
+                <button onclick="switchTab('bookTab')" id="btn-bookTab" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-200">📖 പാഠപുസ്തകം & റീഡിങ്</button>
+                <button onclick="switchTab('quizTab')" id="btn-quizTab" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-200">🧩 ക്വിസ് (Quiz JSON)</button>
+            </div>
+
+            <div class="p-6">
+                <div id="madrassaTab" class="tab-content block">
+                    <h3 class="text-md font-bold text-gray-700 mb-2">കുട്ടികളുടെ വിവരങ്ങൾ ഇവിടെ നൽകുക:</h3>
+                    <p class="text-xs text-gray-500 mb-4">ഫോർമാറ്റ്: <code class="bg-gray-100 px-1 rounded text-red-600">മദ്രസ പേര്: കുട്ടി1, കുട്ടി2, കുട്ടി3</code> (ഓരോ മദ്രസയും പുതിയ വരിയിൽ നൽകുക)</p>
+                    <textarea id="rawStudentData" rows="8" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono" placeholder="ആൽഫാ മദ്രസ: മുഹമ്മദ്, ഫാത്തിമ, അലി&#10;ബീറ്റാ മദ്രസ: സൈനബ്, ഉമർ, അബൂബക്കർ"></textarea>
+                </div>
+
+                <div id="bookTab" class="tab-content hidden">
+                    <h3 class="text-md font-bold text-gray-700 mb-2">പാഠപുസ്തകത്തിലെ വരികൾ (Textbook & Reading Lines):</h3>
+                    <p class="text-xs text-gray-500 mb-4">ഓരോ വരിയും റീഡിങ് ആപ്പിലും ടെക്സ്റ്റ് ബുക്കിലും വരാൻ പുതിയ ലൈനിൽ നൽകുക.</p>
+                    <textarea id="rawBookLines" rows="8" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none word-wrap-fix" placeholder="ഒന്നാമത്തെ വരി ഇവിടെ നൽകുക&#10;രണ്ടാമത്തെ വരി ഇവിടെ നൽകുക"></textarea>
+                </div>
+
+                <div id="quizTab" class="tab-content hidden">
+                    <h3 class="text-md font-bold text-gray-700 mb-2">ക്വിസ് ചോദ്യങ്ങൾ (Tafheem JSON Format):</h3>
+                    <p class="text-xs text-gray-500 mb-4">നിങ്ങൾ തയ്യാറാക്കിയ ക്വിസ് ചോദ്യങ്ങളുടെ ശരിയായ JSON കോഡ് താഴെ നൽകുക.</p>
+                    <textarea id="rawQuizJSON" rows="8" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono" placeholder='[\n  {\n    "question": "ചോദ്യം ഇവിടെ വരും?",\n    "options": ["ഓപ്ഷൻ A", "ഓപ്ഷൻ B", "ഓപ്ഷൻ C", "ഓപ്ഷൻ D"],\n    "answer": 0,\n    "tafheem": "തഫ്ഹീം (വിശദീകരണം) ഇവിടെ"\n  }\n]'></textarea>
+                </div>
+            </div>
+        </section>
+
+        <div class="text-center my-8">
+            <button onclick="publishToGitHubDirectly()" id="publishBtn" class="bg-gradient-to-r border border-blue-700 from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transform transition active:scale-95 text-md cursor-pointer flex items-center gap-2 mx-auto">
+                🚀 എല്ലാ ആപ്പുകളിലേക്കും ഡാറ്റ പബ്ലിഷ് ചെയ്യുക
+            </button>
+            <p id="loadText" class="text-sm font-medium text-blue-600 mt-3 hidden"></p>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 text-xs mt-12 border-t border-gray-700">
+        <p>© 2026 Educational Content Developer Portal. Designed for Responsive Ecosystem.</p>
+    </footer>
+
+    <script>
+        // ടാബുകൾ മാറാനുള്ള ഫങ്ക്ഷൻ
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                el.classList.add('text-gray-600', 'hover:bg-gray-200');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-200');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+        }
+
+        // ഗിറ്റ്ഹബിലേക്ക് ഫയലുകൾ നേരിട്ട് അപ്ഡേറ്റ് ചെയ്യുന്ന പ്രധാന ഫങ്ക്ഷൻ
+        async function publishToGitHubDirectly() {
+            const token = document.getElementById('ghToken').value.trim();
+            const owner = document.getElementById('ghOwner').value.trim();
+            const repo = document.getElementById('ghRepo').value.trim();
+
+            // ഗ്ലോബൽ വേരിയബിളുകൾ
+            const cls = document.getElementById('globalClass').value.trim();
+            const sub = document.getElementById('globalSubject').value.trim();
+            const prt = document.getElementById('globalPart').value.trim();
+            const chp = document.getElementById('globalChapter').value.trim();
+
+            if(!token || !owner || !repo) {
+                alert("ദയവായി GitHub കോൺഫിഗറേഷൻ വിവരങ്ങൾ (Token, Owner, Repo) പൂർണ്ണമായി നൽകുക!");
+                return;
+            }
+
+            if(!cls || !sub || !prt || !chp) {
+                alert("സർട്ടിഫിക്കറ്റിലും ആപ്പുകളിലും കൃത്യമായി വരാൻ 'പൊതുവായ വിവരങ്ങൾ' പൂർണ്ണമായി നൽകേണ്ടതുണ്ട്!");
+                return;
+            }
+
+            const loadText = document.getElementById('loadText');
+            const publishBtn = document.getElementById('publishBtn');
+
+            loadText.classList.remove('hidden');
+            publishBtn.disabled = true;
+            publishBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 1. പൊതുവായ വിവരങ്ങളുടെ ഒബ്ജക്റ്റ് (Certificate Data)
+            let infoObj = {
+                class: cls,
+                subject: sub,
+                part: prt,
+                chapter: chp,
+                updatedAt: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+            };
+
+            try {
+                // =========================================================
+                // PHASE 1: വേർഡ് ആപ്പ് & വിജയ് സർട്ടിഫിക്കറ്റ് ഡാറ്റ സിങ്ക് (data.json)
+                // =========================================================
+                loadText.innerText = "⚙️ വേർഡ് ആപ്പ്, സർട്ടിഫിക്കറ്റ് വിവരങ്ങൾ സിങ്ക് ചെയ്യുന്നു...";
+                
+                let masterSchoolData = {};
+                const lines = document.getElementById('rawStudentData').value.split('\n');
+                lines.forEach(line => {
+                    if(line.includes(':')) {
+                        let parts = line.split(':');
+                        let schoolName = parts[0].trim();
+                        let students = parts[1].split(',').map(s => s.trim()).filter(s => s.length > 0);
+                        if(schoolName && students.length > 0) {
+                            masterSchoolData[schoolName] = students;
+                        }
+                    }
+                });
+
+                // സർട്ടിഫിക്കറ്റിനായി 'globalInfo' ഉള്ളിൽ ചേർത്ത പുതിയ ഘടന
+                let finalWordConfig = { 
+                    version: Date.now(),
+                    globalInfo: infoObj, 
+                    madrassas: [], 
+                    words: [] 
+                };
+
+                Object.keys(masterSchoolData).forEach(mName => { 
+                    finalWordConfig.madrassas.push({ 
+                        name: mName, 
+                        metaInfo: `${infoObj.class} - ${infoObj.subject} (${infoObj.part})`, // സർട്ടിഫിക്കറ്റിലേക്ക് ആവശ്യമായ ഡാറ്റ ലിങ്ക് ചെയ്യുന്നു
+                        students: masterSchoolData[mName] 
+                    }); 
+                });
+
+                await uploadToGitHub(token, owner, repo, 'data.json', JSON.stringify(finalWordConfig, null, 2));
+
+                // =========================================================
+                // PHASE 2: പാഠപുസ്തകം & റീഡിങ് ആപ്പ് ഡാറ്റ സിങ്ക് (data_book.json)
+                // =========================================================
+                loadText.innerText = "📖 പാഠപുസ്തക വരികൾ അപ്ഡേറ്റ് ചെയ്യുന്നു...";
+                const textLines = document.getElementById('rawBookLines').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                
+                let finalBookConfig = {
+                    info: infoObj,
+                    lines: textLines
+                };
+                await uploadToGitHub(token, owner, repo, 'data_book.json', JSON.stringify(finalBookConfig, null, 2));
+
+                // =========================================================
+                // PHASE 3: ക്വിസ് ആപ്പ് ഡാറ്റ സിങ്ക് (quiz_data.json)
+                // =========================================================
+                loadText.innerText = "🧩 ക്വിസ് ചോദ്യങ്ങൾ അപ്ഡേറ്റ് ചെയ്യുന്നു...";
+                let quizInput = document.getElementById('rawQuizJSON').value.trim();
+                let quizQuestions = [];
+                if(quizInput) {
+                    try {
+                        quizQuestions = JSON.parse(quizInput);
+                    } catch(e) {
+                        alert("ക്വിസ് JSON ഫോർമാറ്റിൽ തെറ്റുകളുണ്ട്. ദയവായി പരിശോധിക്കുക! (എങ്കിലും പ്രോസസ്സ് തുടരുന്നു)");
+                    }
+                }
+
+                let finalQuizConfig = {
+                    info: infoObj,
+                    questions: quizQuestions
+                };
+                await uploadToGitHub(token, owner, repo, 'quiz_data.json', JSON.stringify(finalQuizConfig, null, 2));
+
+                // SUCCESS
+                loadText.innerText = "✅ എല്ലാ ആപ്പുകളിലേക്കും വിജയ് സർട്ടിഫിക്കറ്റിലേക്കും വിവരങ്ങൾ വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തു!";
+                alert("മാറ്റങ്ങൾ വിജയകരമായി സേവ് ചെയ്തിരിക്കുന്നു! എല്ലാ ആപ്പുകളും സർട്ടിഫിക്കറ്റും പുതിയ വിവരങ്ങൾ ഉപയോഗിക്കാൻ സജ്ജമാണ്.");
+
+            } catch (error) {
+                console.error(error);
+                loadText.innerText = "❌ അപ്ഡേഷനിൽ തടസ്സം നേരിട്ടു!";
+                alert("GitHub സിങ്ക് പരാജയപ്പെട്ടു: " + error.message);
+            } finally {
+                publishBtn.disabled = false;
+                publishBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // GitHub API ഉഫയോഗിച്ച് ഫയൽ റീപ്ലേസ് ചെയ്യാനുള്ള ഹെൽപ്പർ ഫങ്ക്ഷൻ
+        async function uploadToGitHub(token, owner, repo, path, content) {
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            
+            // ഫയൽ നിലവിലുണ്ടോ എന്ന് നോക്കി അതിന്റെ sha കീ എടുക്കുന്നു
+            let sha = null;
+            try {
+                let res = await fetch(url, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if(res.status === 200) {
+                    let data = await res.json();
+                    sha = data.sha;
+                }
+            } catch(e) { /* ഫയൽ പുതുതായി നിർമ്മിക്കുകയാണെങ്കിൽ sha ആവശ്യമില്ല */ }
+
+            let bodyContent = {
+                message: `Automated update for ${path} via Content Panel`,
+                content: btoa(unescape(encodeURIComponent(content))) // Unicode പ്രശ്നങ്ങൾ ഒഴിവാക്കാൻ
+            };
+            if(sha) bodyContent.sha = sha;
+
+            let response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyContent)
+            });
+
+            if(!response.ok) {
+                let errData = await response.json();
+                throw new Error(errData.message || "ഫയൽ അപ്‌ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല.");
+            }
+        }
+    </script>
+</body>
+</html>
