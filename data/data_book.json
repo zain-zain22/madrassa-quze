@@ -1,5 +1,12 @@
 {
-  "version": 1781882763201,
+  "version": 1781964410275,
+  "globalInfo": {
+    "class": "5",
+    "subject": "Fiqh",
+    "part": "1",
+    "chapter": "3",
+    "lessonName": "Nisakaram"
+  },
   "pages": [
     {
       "image": "data/page_1781882756762_0_image.jpg",
