@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>സൂപ്പർ വേർഡ് ചലഞ്ച്</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #1e3a8a; --success: #10b981; --danger: #ef4444; --bg: #f0f4f8; --gold: #ffd700; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        .game-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; text-align: center; }
+        .master-speaker-btn { background: #3b82f6; color: white; width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; margin-bottom: 10px; }
+        .letter-block { display: inline-block; padding: 10px 15px; margin: 5px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 24px; font-family: 'Amiri', serif; background: #fff; font-weight: bold; transition: 0.2s; }
+        .letter-block:active { transform: scale(0.9); }
+        .wrong { background: #fee2e2; border-color: red; }
+        .disabled { opacity: 0.2; pointer-events: none; background: #e2e8f0; }
+        .arabic-text-output { font-size: 36px; color: #047857; min-height: 55px; margin: 20px 0; font-family: 'Amiri', serif; direction: rtl; letter-spacing: 2px; }
+        .selection-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; outline: none; }
+        
+        /* സർട്ടിഫിക്കറ്റ് ഡിസൈൻ */
+        .win-container { display: none; background: #0a192f; border-radius: 16px; padding: 25px; border: 3px solid var(--gold); text-align: center; color: white; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .certificate { border: 4px double var(--gold); padding: 20px; border-radius: 15px; background: #001122; margin-top: 15px; }
+        .cert-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(255,215,0,0.2); font-size: 14px; color: #fff; }
+        .start-btn { background: var(--gold); color: black; font-size: 16px; border: none; padding: 14px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 50px; margin-top: 15px; transition: 0.3s; }
+        .start-btn:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header style="text-align:center; padding:15px; background:var(--primary); color:white; border-radius:12px; margin-bottom:15px;">
+        <h1><i class="fa-solid fa-brain"></i> വേർഡ് ചലഞ്ച്</h1>
+    </header>
+
+    <div class="selection-box" id="setupBox">
+        <label style="font-weight:bold; color:#333;">മദ്രസ തിരഞ്ഞെടുക്കുക:</label>
+        <select id="madrassaSelect" onchange="updateStudentsDropdown()"><option value="">-- തിരഞ്ഞെടുക്കുക --</option></select>
+        <label style="margin-top:10px; display:block; font-weight:bold; color:#333;">നിങ്ങളുടെ പേര് തിരഞ്ഞെടുക്കുക:</label>
+        <select id="studentSelect" onchange="startGame()"><option value="">-- പേര് തിരഞ്ഞെടുക്കുക --</option></select>
+    </div>
+
+    <div class="game-container" id="gameZone">
+        <div style="font-size:14px; color:#666; margin-bottom:10px; font-weight:bold;" id="levelProgress">ലെവൽ: 0 / 0</div>
+        <button class="master-speaker-btn" id="speakerBtn" onclick="playCurrentWordAudio()"><i class="fa-solid fa-volume-high"></i></button>
+        <div id="malWordDisplay" style="font-size:22px; font-weight:bold; margin:15px 0; color:var(--primary);">---</div>
+        <div class="arabic-text-output" id="arabicOutput"></div>
+        <div class="letters-pool" id="lettersPool"></div>
+    </div>
+
+    <div class="win-container" id="winZone">
+        <h2 style="color:var(--gold); margin-top:0;"><i class="fa-solid fa-trophy"></i> ചലഞ്ച് പൂർത്തിയായി!</h2>
+        <p style="color:#ccc; font-size:14px;">എല്ലാ വാക്കുകളും നിങ്ങൾ വിജയകരമായി പൂർത്തിയാക്കിയിരിക്കുന്നു.</p>
+        
+        <div class="certificate">
+            <h3 style="text-align:center; color: var(--gold); margin-top:0; letter-spacing: 1px;">വേർഡ് ചലഞ്ച് സർട്ടിഫിക്കറ്റ്</h3>
+            <div id="certSchoolName" style="text-align:center; font-size:15px; color:var(--gold); margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">-</div>
+            <div class="cert-row"><span>പേര്:</span> <b id="final-name" style="color:var(--gold)">-</b></div>
+            <div class="cert-row"><span>ആകെ തെറ്റുകൾ:</span> <b id="final-attempts" style="color: #ef4444;">0 തവണ</b></div>
+            <div class="cert-row"><span>പൂർത്തിയാക്കിയത്:</span> <b id="final-real-time">-</b></div>
+            <div id="certClassStatus" style="text-align:center; font-size:13px; margin-top:15px; line-height:1.5; color:var(--gold); font-weight:bold;">-</div>
+
+            <canvas id="wordCertCanvas" width="800" height="580" style="display:none;"></canvas>
+
+            <button class="start-btn" style="background:#10b981; color:white; font-size:15px;" onclick="downloadWordCertificate()">
+                <i class="fa-solid fa-download"></i> സർട്ടിഫിക്കറ്റ് ഗാലറിയിലേക്ക് ഡൗൺലോഡ് ചെയ്യുക
+            </button>
+        </div>
+
+        <button class="start-btn" style="background:#3b82f6; color:white;" onclick="location.reload()">🔄 വീണ്ടും കളിക്കുക</button>
+    </div>
+</div>
+
+<script>
+    let appData = { madrassas: [], words: [], quizInfo: {} }; // quizInfo കൂടി സംഭരിക്കുന്നു
+    let currentWordIndex = 0;
+    let currentTypedLetters = [];
+    let targetLettersSequence = [];
+    let totalWrongCount = 0; // തെറ്റുകളുടെ എണ്ണം ട്രാക്ക് ചെയ്യാൻ
+    let playerName = "";
+    let selectedMadrasaName = "";
+
+    // ഡാറ്റ ലോഡ് ചെയ്യുന്നു
+    fetch('data/data.json?t=' + Date.now())
+        .then(res => res.json())
+        .then(data => {
+            appData = data;
+            let select = document.getElementById("madrassaSelect");
+            if(appData.madrassas) {
+                appData.madrassas.forEach((m, i) => {
+                    let opt = document.createElement("option"); opt.value = i; opt.textContent = m.name;
+                    select.appendChild(opt);
+                });
+            }
+        }).catch(err => alert("ഡാറ്റ ഫയൽ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല!"));
+
+    function updateStudentsDropdown() {
+        let mIndex = document.getElementById("madrassaSelect").value;
+        let sSelect = document.getElementById("studentSelect");
+        sSelect.innerHTML = '<option value="">-- പേര് തിരഞ്ഞെടുക്കുക --</option>';
+        if(mIndex !== "") {
+            selectedMadrasaName = appData.madrassas[mIndex].name;
+            appData.madrassas[mIndex].students.forEach(s => {
+                let opt = document.createElement("option"); opt.value = s; opt.textContent = s;
+                sSelect.appendChild(opt);
+            });
+        }
+    }
+
+    function startGame() {
+        playerName = document.getElementById("studentSelect").value;
+        if(playerName) {
+            document.getElementById("setupBox").style.display = "none";
+            document.getElementById("gameZone").style.display = "block";
+            currentWordIndex = 0;
+            totalWrongCount = 0;
+            loadWordLevel();
+        }
+    }
+
+    function splitArabicWord(word) { return word.match(/[\u0600-\u06ff][\u064b-\u065f]*/g) || []; }
+
+    function loadWordLevel() {
+        if(!appData.words || appData.words.length === 0) {
+            alert("വാക്കുകൾ ലഭ്യമല്ല!");
+            return;
+        }
+
+        // ലെവൽ പ്രോഗ്രസ്സ് കാണിക്കുന്നു
+        document.getElementById("levelProgress").textContent = `വാക്ക്: ${currentWordIndex + 1} / ${appData.words.length}`;
+
+        let obj = appData.words[currentWordIndex];
+        document.getElementById("malWordDisplay").textContent = obj.mal;
+        document.getElementById("arabicOutput").textContent = "";
+        currentTypedLetters = [];
+        targetLettersSequence = splitArabicWord(obj.arbiText);
+        
+        // ഓട്ടോമാറ്റിക് ആയി ഓഡിയോ പ്ലേ ചെയ്യുന്നു
+        playCurrentWordAudio();
+
+        let pool = document.getElementById("lettersPool");
+        pool.innerHTML = "";
+        
+        // അക്ഷരങ്ങൾ മിക്സ് ചെയ്ത് ഡിസ്‌പ്ലേ ചെയ്യുന്നു
+        targetLettersSequence.slice().sort(() => Math.random() - 0.5).forEach((l, i) => {
+            let b = document.createElement("div"); b.className = "letter-block"; b.textContent = l;
+            b.onclick = () => {
+                if (l === targetLettersSequence[currentTypedLetters.length]) {
+                    currentTypedLetters.push(l);
+                    document.getElementById("arabicOutput").textContent = currentTypedLetters.join("");
+                    b.classList.add("disabled");
+                    
+                    // വാക്ക് പൂർത്തിയായാൽ
+                    if (currentTypedLetters.length === targetLettersSequence.length) {
+                        setTimeout(() => {
+                            currentWordIndex++;
+                            if(currentWordIndex < appData.words.length) {
+                                loadWordLevel();
+                            } else {
+                                showFinalChallengeResult();
+                            }
+                        }, 500);
+                    }
+                } else {
+                    // തെറ്റിയാൽ ബ്ലോക്ക് ചുവപ്പാവുകയും തെറ്റ് കണക്കാക്കുകയും ചെയ്യും
+                    b.classList.add("wrong");
+                    totalWrongCount++;
+                    setTimeout(() => { b.classList.remove("wrong"); }, 500);
+                }
+            };
+            pool.appendChild(b);
+        });
+    }
+
+    function playCurrentWordAudio() {
+        if(appData.words[currentWordIndex] && appData.words[currentWordIndex].audio) {
+            let audioUrl = 'data/' + appData.words[currentWordIndex].audio;
+            let audio = new Audio(audioUrl);
+            audio.play().catch(e => console.log("ഓഡിയോ പ്ലേ ചെയ്യാൻ സാധിച്ചില്ല."));
+        }
+    }
+
+    function showFinalChallengeResult() {
+        document.getElementById("gameZone").style.display = "none";
+        document.getElementById("winZone").style.display = "block";
+
+        document.getElementById('certSchoolName').innerText = selectedMadrasaName; 
+        document.getElementById('final-name').innerText = playerName; 
+        document.getElementById('final-attempts').innerText = totalWrongCount + " തവണ"; 
+
+        let now = new Date(); 
+        let timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
+        let dateStr = now.toLocaleDateString('en-GB'); 
+        document.getElementById('final-real-time').innerText = `${timeStr} | ${dateStr}`; 
+
+        // അഡ്മിൻ പാനലിലെ പൊതുവിവരങ്ങൾ ഉണ്ടെങ്കിൽ അത് ലോഡ് ചെയ്യുന്നു
+        let info = appData.quizInfo || {};
+        let className = info.class ? info.class : "-"; 
+        let subjectName = info.subject ? info.subject : "-"; 
+        let lessonName = info.lessonName ? info.lessonName : "-"; 
+
+        document.getElementById('certClassStatus').innerText = `ക്ലാസ്: ${className} | വിഷയം: ${subjectName} \n പാഠം: ${lessonName}`; 
+    }
+
+    // HTML5 Canvas വഴി മികച്ച ഡിജിറ്റൽ സർട്ടിഫിക്കറ്റ് ചിത്രം ഉണ്ടാക്കുന്ന ഫങ്ക്ഷൻ
+    function downloadWordCertificate() {
+        const canvas = document.getElementById('wordCertCanvas');
+        const ctx = canvas.getContext('2d');
+        const info = appData.quizInfo || {};
+
+        // 1. പശ്ചാത്തലം റിച്ച് റോയൽ ബ്ലൂ റേഡിയൽ ഗ്രേഡിയന്റ്
+        let grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 50, canvas.width/2, canvas.height/2, canvas.width/1.2);
+        grad.addColorStop(0, '#1e3a8a');
+        grad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. ഗോൾഡൻ ഡബിൾ ബോർഡർ
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 8;
+        ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+        
+        ctx.strokeStyle = "rgba(255, 215, 0, 0.3)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(27, 27, canvas.width - 54, canvas.height - 54);
+
+        // 3. തലക്കെട്ടുകൾ പ്രിന്റ് ചെയ്യുന്നു
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillStyle = "#ffd700";
+        ctx.font = "bold 34px 'Segoe UI', sans-serif";
+        ctx.fillText("🧠 സൂപ്പർ വേർഡ് ചലഞ്ച് 🧠", canvas.width / 2, 80);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 24px 'Segoe UI', sans-serif";
+        ctx.fillText("വിജയ സർട്ടിഫിക്കറ്റ്", canvas.width / 2, 135);
+
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.font = "italic 16px 'Segoe UI', sans-serif";
+        ctx.fillText("അറബിക് പദവിന്യാസ ചലഞ്ച് മികച്ച രീതിയിൽ പൂർത്തിയാക്കിയ", canvas.width / 2, 190);
+
+        // 4. കുട്ടിയുടെ പേര്
+        ctx.fillStyle = "#ffd700";
+        ctx.font = "bold 32px 'Segoe UI', sans-serif";
+        ctx.fillText(playerName, canvas.width / 2, 240);
+
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.font = "16px 'Segoe UI', sans-serif";
+        ctx.fillText(`മദ്രസ: ${selectedMadrasaName}`, canvas.width / 2, 280);
+
+        // 5. പൊതുവിവരങ്ങൾ പ്രിന്റ് ചെയ്യുന്ന ബോക്സ് (അഡ്മിൻ പാനലിൽ നിന്നുള്ള വിവരങ്ങൾ)
+        ctx.fillStyle = "rgba(255, 215, 0, 0.05)";
+        ctx.fillRect(80, 320, canvas.width - 160, 150);
+        ctx.strokeStyle = "rgba(255, 215, 0, 0.2)";
+        ctx.strokeRect(80, 320, canvas.width - 160, 150);
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#ffd700";
+        ctx.font = "bold 17px 'Segoe UI', sans-serif";
+        
+        let startX = 120;
+        let startY = 355;
+        let spacing = 35;
+
+        ctx.fillText(`📚 ക്ലാസ്സ്: ${info.class || '--'}`, startX, startY);
+        ctx.fillText(`📖 വിഷയം: ${info.subject || '--'}`, startX, startY + spacing);
+        ctx.fillText(`✒️ പാഠം: ${info.lessonName || '--'}`, startX, startY + (spacing * 2));
+
+        // വലതുവശത്ത് തെറ്റുകളുടെ വിവരം പ്രിന്റ് ചെയ്യുന്നു
+        let rightX = startX + 330;
+        ctx.fillStyle = "#ef4444";
+        ctx.fillText(`❌ വരുത്തിയ തെറ്റുകൾ: ${totalWrongCount} തവണ`, rightX, startY);
+        
+        ctx.fillStyle = "#10b981";
+        ctx.font = "bold 20px 'Segoe UI', sans-serif";
+        ctx.fillText("🏆 പദവിന്യാസ വിജയി!", rightX, startY + 50);
+
+        // 6. ഫൂട്ടർ വിവരങ്ങൾ
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 16px 'Segoe UI', sans-serif";
+        ctx.fillText("✨ അക്ഷരക്കൂട്ടുക്കൾ കൃത്യമായി കണ്ടെത്തിയ മിടുക്കന് അഭിനന്ദനങ്ങൾ! ✨", canvas.width / 2, 510);
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.font = "12px 'Segoe UI', sans-serif";
+        let fullDateText = document.getElementById('final-real-time').innerText;
+        ctx.fillText(`തീയതി: ${fullDateText}`, 45, 555);
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffd700";
+        ctx.font = "bold 14px 'Segoe UI', sans-serif";
+        ctx.fillText("വേർഡ് ചലഞ്ച് ടീം", canvas.width - 45, 555);
+
+        // ഇമേജ് ഡൗൺലോഡ് പ്രക്രിയ
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.download = `Word_Challenge_Certificate_${playerName}.png`;
+        link.href = image;
+        link.click();
+    }
+</script>
+</body>
+</html>
