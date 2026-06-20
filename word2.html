@@ -11,7 +11,7 @@
         .container { max-width: 500px; margin: 0 auto; }
         .game-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; text-align: center; }
         .master-speaker-btn { background: #3b82f6; color: white; width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; margin-bottom: 10px; }
-        .letter-block { display: inline-block; padding: 10px 15px; margin: 5px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 24px; font-family: 'Amiri', serif; background: #fff; font-weight: bold; transition: 0.2s; }
+        .letter-block { display: inline-block; padding: 10px 15px; margin: 5px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 24px; font-family: 'Amiri', serif; background: #fff; font-weight: bold; transition: 0.2s; user-select: none; }
         .letter-block:active { transform: scale(0.9); }
         .wrong { background: #fee2e2; border-color: red; }
         .disabled { opacity: 0.2; pointer-events: none; background: #e2e8f0; }
@@ -42,7 +42,7 @@
     </div>
 
     <div class="game-container" id="gameZone">
-        <div style="font-size:14px; color:#666; margin-bottom:10px; font-weight:bold;" id="levelProgress">ലെവൽ: 0 / 0</div>
+        <div style="font-size:14px; color:#666; margin-bottom:10px; font-weight:bold;" id="levelProgress">വാക്ക്: 0 / 0</div>
         <button class="master-speaker-btn" id="speakerBtn" onclick="playCurrentWordAudio()"><i class="fa-solid fa-volume-high"></i></button>
         <div id="malWordDisplay" style="font-size:22px; font-weight:bold; margin:15px 0; color:var(--primary);">---</div>
         <div class="arabic-text-output" id="arabicOutput"></div>
@@ -57,7 +57,7 @@
             <h3 style="text-align:center; color: var(--gold); margin-top:0; letter-spacing: 1px;">വേർഡ് ചലഞ്ച് സർട്ടിഫിക്കറ്റ്</h3>
             <div id="certSchoolName" style="text-align:center; font-size:15px; color:var(--gold); margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">-</div>
             <div class="cert-row"><span>പേര്:</span> <b id="final-name" style="color:var(--gold)">-</b></div>
-            <div class="cert-row"><span>ആകെ തെറ്റുകൾ:</span> <b id="final-attempts" style="color: #ef4444;">0 തവണ</b></div>
+            <div class="cert-row"><span>വരുത്തിയ ആകെ തെറ്റുകൾ:</span> <b id="final-attempts" style="color: #ef4444;">0 തവണ</b></div>
             <div class="cert-row"><span>പൂർത്തിയാക്കിയത്:</span> <b id="final-real-time">-</b></div>
             <div id="certClassStatus" style="text-align:center; font-size:13px; margin-top:15px; line-height:1.5; color:var(--gold); font-weight:bold;">-</div>
 
@@ -73,27 +73,33 @@
 </div>
 
 <script>
-    let appData = { madrassas: [], words: [], quizInfo: {} }; // quizInfo കൂടി സംഭരിക്കുന്നു
+    let appData = { madrassas: [], words: [] }; 
+    let generalQuizInfo = {}; // ക്വിസ്സ് ഇൻഫോ സെപ്പറേറ്റ് ആയി സൂക്ഷിക്കാൻ
     let currentWordIndex = 0;
     let currentTypedLetters = [];
     let targetLettersSequence = [];
-    let totalWrongCount = 0; // തെറ്റുകളുടെ എണ്ണം ട്രാക്ക് ചെയ്യാൻ
+    let totalWrongCount = 0; 
     let playerName = "";
     let selectedMadrasaName = "";
 
-    // ഡാറ്റ ലോഡ് ചെയ്യുന്നു
-    fetch('data/data.json?t=' + Date.now())
-        .then(res => res.json())
-        .then(data => {
-            appData = data;
-            let select = document.getElementById("madrassaSelect");
-            if(appData.madrassas) {
-                appData.madrassas.forEach((m, i) => {
-                    let opt = document.createElement("option"); opt.value = i; opt.textContent = m.name;
-                    select.appendChild(opt);
-                });
-            }
-        }).catch(err => alert("ഡാറ്റ ഫയൽ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല!"));
+    // രണ്ട് ഫയലുകളും ഒരുമിച്ച് ലോഡ് ചെയ്യുന്നു
+    Promise.all([
+        fetch('data/data.json?t=' + Date.now()).then(res => res.json()),
+        fetch('data/quiz_data.json?t=' + Date.now()).then(res => res.json()).catch(e => ({ quizInfo: {} })) // ക്വിസ് ഫയൽ ഇല്ലെങ്കിൽ എറർ വരാതിരിക്കാൻ
+    ])
+    .then(([wordData, quizData]) => {
+        appData = wordData;
+        generalQuizInfo = quizData.quizInfo || {}; // അഡ്മിൻ പാനലിലെ പൊതുവിവരങ്ങൾ ഇവിടെ സേവായി
+
+        let select = document.getElementById("madrassaSelect");
+        if(appData.madrassas) {
+            appData.madrassas.forEach((m, i) => {
+                let opt = document.createElement("option"); opt.value = i; opt.textContent = m.name;
+                select.appendChild(opt);
+            });
+        }
+    })
+    .catch(err => alert("ഡാറ്റ ഫയലുകൾ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല!"));
 
     function updateStudentsDropdown() {
         let mIndex = document.getElementById("madrassaSelect").value;
@@ -127,7 +133,6 @@
             return;
         }
 
-        // ലെവൽ പ്രോഗ്രസ്സ് കാണിക്കുന്നു
         document.getElementById("levelProgress").textContent = `വാക്ക്: ${currentWordIndex + 1} / ${appData.words.length}`;
 
         let obj = appData.words[currentWordIndex];
@@ -136,13 +141,11 @@
         currentTypedLetters = [];
         targetLettersSequence = splitArabicWord(obj.arbiText);
         
-        // ഓട്ടോമാറ്റിക് ആയി ഓഡിയോ പ്ലേ ചെയ്യുന്നു
         playCurrentWordAudio();
 
         let pool = document.getElementById("lettersPool");
         pool.innerHTML = "";
         
-        // അക്ഷരങ്ങൾ മിക്സ് ചെയ്ത് ഡിസ്‌പ്ലേ ചെയ്യുന്നു
         targetLettersSequence.slice().sort(() => Math.random() - 0.5).forEach((l, i) => {
             let b = document.createElement("div"); b.className = "letter-block"; b.textContent = l;
             b.onclick = () => {
@@ -151,7 +154,6 @@
                     document.getElementById("arabicOutput").textContent = currentTypedLetters.join("");
                     b.classList.add("disabled");
                     
-                    // വാക്ക് പൂർത്തിയായാൽ
                     if (currentTypedLetters.length === targetLettersSequence.length) {
                         setTimeout(() => {
                             currentWordIndex++;
@@ -163,10 +165,13 @@
                         }, 500);
                     }
                 } else {
-                    // തെറ്റിയാൽ ബ്ലോക്ക് ചുവപ്പാവുകയും തെറ്റ് കണക്കാക്കുകയും ചെയ്യും
-                    b.classList.add("wrong");
+                    // അക്ഷരം തെറ്റിയാൽ ഉടൻ ലോഡ് ഔട്ടായി ലോഗിൻ പേജിലേക്ക് പോകുന്ന ഫങ്ക്ഷൻ തിരികെ നൽകി
                     totalWrongCount++;
-                    setTimeout(() => { b.classList.remove("wrong"); }, 500);
+                    b.classList.add("wrong");
+                    setTimeout(() => { 
+                        alert("തെറ്റായിപ്പോയി! ലോഗിൻ പേജിലേക്ക് മടങ്ങുന്നു, വീണ്ടും ആദ്യം മുതൽ ശ്രമിക്കുക.");
+                        location.reload(); // പേജ് പൂർണ്ണമായി റീലോഡ് ചെയ്ത് ആദ്യം മുതൽ വരുന്നു
+                    }, 200);
                 }
             };
             pool.appendChild(b);
@@ -194,29 +199,32 @@
         let dateStr = now.toLocaleDateString('en-GB'); 
         document.getElementById('final-real-time').innerText = `${timeStr} | ${dateStr}`; 
 
-        // അഡ്മിൻ പാനലിലെ പൊതുവിവരങ്ങൾ ഉണ്ടെങ്കിൽ അത് ലോഡ് ചെയ്യുന്നു
-        let info = appData.quizInfo || {};
+        // ക്വിസ്സ് ഫയലിലെ യഥാർത്ഥ പൊതുവിവരങ്ങൾ കൃത്യമായി എടുക്കുന്നു
+        let info = generalQuizInfo;
         let className = info.class ? info.class : "-"; 
         let subjectName = info.subject ? info.subject : "-"; 
-        let lessonName = info.lessonName ? info.lessonName : "-"; 
+        let lessonName = info.lessonName ? info.lessonName : (info.lesson ? info.lesson : "-"); 
 
         document.getElementById('certClassStatus').innerText = `ക്ലാസ്: ${className} | വിഷയം: ${subjectName} \n പാഠം: ${lessonName}`; 
     }
 
-    // HTML5 Canvas വഴി മികച്ച ഡിജിറ്റൽ സർട്ടിഫിക്കറ്റ് ചിത്രം ഉണ്ടാക്കുന്ന ഫങ്ക്ഷൻ
     function downloadWordCertificate() {
         const canvas = document.getElementById('wordCertCanvas');
         const ctx = canvas.getContext('2d');
-        const info = appData.quizInfo || {};
+        
+        let info = generalQuizInfo;
+        let className = info.class ? info.class : "-";
+        let subjectName = info.subject ? info.subject : "-";
+        let lessonName = info.lessonName ? info.lessonName : (info.lesson ? info.lesson : "-");
 
-        // 1. പശ്ചാത്തലം റിച്ച് റോയൽ ബ്ലൂ റേഡിയൽ ഗ്രേഡിയന്റ്
+        // 1. പശ്ചാത്തലം
         let grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 50, canvas.width/2, canvas.height/2, canvas.width/1.2);
         grad.addColorStop(0, '#1e3a8a');
         grad.addColorStop(1, '#0f172a');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. ഗോൾഡൻ ഡബിൾ ബോർഡർ
+        // 2. ബോർഡർ
         ctx.strokeStyle = "#ffd700";
         ctx.lineWidth = 8;
         ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
@@ -225,7 +233,7 @@
         ctx.lineWidth = 2;
         ctx.strokeRect(27, 27, canvas.width - 54, canvas.height - 54);
 
-        // 3. തലക്കെട്ടുകൾ പ്രിന്റ് ചെയ്യുന്നു
+        // 3. ടെക്സ്റ്റുകൾ
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
@@ -241,7 +249,7 @@
         ctx.font = "italic 16px 'Segoe UI', sans-serif";
         ctx.fillText("അറബിക് പദവിന്യാസ ചലഞ്ച് മികച്ച രീതിയിൽ പൂർത്തിയാക്കിയ", canvas.width / 2, 190);
 
-        // 4. കുട്ടിയുടെ പേര്
+        // 4. കുട്ടി
         ctx.fillStyle = "#ffd700";
         ctx.font = "bold 32px 'Segoe UI', sans-serif";
         ctx.fillText(playerName, canvas.width / 2, 240);
@@ -250,7 +258,7 @@
         ctx.font = "16px 'Segoe UI', sans-serif";
         ctx.fillText(`മദ്രസ: ${selectedMadrasaName}`, canvas.width / 2, 280);
 
-        // 5. പൊതുവിവരങ്ങൾ പ്രിന്റ് ചെയ്യുന്ന ബോക്സ് (അഡ്മിൻ പാനലിൽ നിന്നുള്ള വിവരങ്ങൾ)
+        // 5. വിവരങ്ങൾ കാണിക്കുന്ന ബോക്സ്
         ctx.fillStyle = "rgba(255, 215, 0, 0.05)";
         ctx.fillRect(80, 320, canvas.width - 160, 150);
         ctx.strokeStyle = "rgba(255, 215, 0, 0.2)";
@@ -264,11 +272,10 @@
         let startY = 355;
         let spacing = 35;
 
-        ctx.fillText(`📚 ക്ലാസ്സ്: ${info.class || '--'}`, startX, startY);
-        ctx.fillText(`📖 വിഷയം: ${info.subject || '--'}`, startX, startY + spacing);
-        ctx.fillText(`✒️ പാഠം: ${info.lessonName || '--'}`, startX, startY + (spacing * 2));
+        ctx.fillText(`📚 ക്ലാസ്സ്: ${className}`, startX, startY);
+        ctx.fillText(`📖 വിഷയം: ${subjectName}`, startX, startY + spacing);
+        ctx.fillText(`✒️ പാഠം: ${lessonName}`, startX, startY + (spacing * 2));
 
-        // വലതുവശത്ത് തെറ്റുകളുടെ വിവരം പ്രിന്റ് ചെയ്യുന്നു
         let rightX = startX + 330;
         ctx.fillStyle = "#ef4444";
         ctx.fillText(`❌ വരുത്തിയ തെറ്റുകൾ: ${totalWrongCount} തവണ`, rightX, startY);
@@ -277,11 +284,11 @@
         ctx.font = "bold 20px 'Segoe UI', sans-serif";
         ctx.fillText("🏆 പദവിന്യാസ വിജയി!", rightX, startY + 50);
 
-        // 6. ഫൂട്ടർ വിവരങ്ങൾ
+        // 6. ഫൂട്ടർ
         ctx.textAlign = "center";
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 16px 'Segoe UI', sans-serif";
-        ctx.fillText("✨ അക്ഷരക്കൂട്ടുക്കൾ കൃത്യമായി കണ്ടെത്തിയ മിടുക്കന് അഭിനന്ദനങ്ങൾ! ✨", canvas.width / 2, 510);
+        ctx.fillText("✨ അക്ഷരക്കൂട്ടുകൾ കൃത്യമായി കണ്ടെത്തിയ മിടുക്കന് അഭിനന്ദനങ്ങൾ! ✨", canvas.width / 2, 510);
 
         ctx.textAlign = "left";
         ctx.fillStyle = "rgba(255,255,255,0.4)";
@@ -294,7 +301,6 @@
         ctx.font = "bold 14px 'Segoe UI', sans-serif";
         ctx.fillText("വേർഡ് ചലഞ്ച് ടീം", canvas.width - 45, 555);
 
-        // ഇമേജ് ഡൗൺലോഡ് പ്രക്രിയ
         const image = canvas.toDataURL("image/png");
         const link = document.createElement('a');
         link.download = `Word_Challenge_Certificate_${playerName}.png`;
