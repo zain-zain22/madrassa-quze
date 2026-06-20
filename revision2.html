@@ -412,8 +412,8 @@
 
             let handImg = document.createElementNS("http://www.w3.org/2000/svg", "image");
             handImg.setAttributeNS("http://www.w3.org/1999/xlink", "href", "hand.png");
-            handImg.setAttribute("width", "80"); handImg.setAttribute("height", "80");
-            handImg.setAttribute("x", pathPoints[0].x - 10); handImg.setAttribute("y", pathPoints[0].y - 10);
+            handImg.setAttribute("width", "140"); handImg.setAttribute("height", "140");
+            handImg.setAttribute("x", pathPoints[0].x - 33); handImg.setAttribute("y", pathPoints[0].y - 50);
             svg.appendChild(handImg);
 
             let ptIdx = 1;
@@ -425,7 +425,7 @@
                 let currPt = pathPoints[ptIdx];
                 let dString = ` L ${currPt.x} ${currPt.y}`;
                 paths.forEach(p => p.setAttribute("d", p.getAttribute("d") + dString));
-                handImg.setAttribute("x", currPt.x - 10); handImg.setAttribute("y", currPt.y - 10);
+                handImg.setAttribute("x", currPt.x - 33); handImg.setAttribute("y", currPt.y - 50);
                 ptIdx++;
             }, speed);
         }
