@@ -30,13 +30,13 @@
         
         #movingHand { 
             position: absolute; 
-            width: 65px; /* കൈയുടെ വലിപ്പം ഇവിടെ മാറ്റാം */
+            width: 80px; 
             height: auto; 
             pointer-events: none; 
             z-index: 10; 
             display: none; 
-            /* പേനയുടെ തുമ്പ് അക്ഷരത്തിന് മുകളിൽ കറക്റ്റ് ആയി വരാൻ ഈ transform മാറ്റാം */
-            transform: translate(-15px, -50px); 
+            /* പേനയുടെ/കൈയുടെ തുമ്പ് ലൈനിലേക്ക് കറക്റ്റ് ചെയ്യാൻ ഉള്ള ട്യൂണിങ് */
+            transform: translate(-20px, -45px); 
             transition: transform 0.05s linear; 
         }
 
@@ -78,7 +78,7 @@
             <h3 style="color:#2ecc71; margin: 0 0 5px 0;"><i class="fa-solid fa-circle-check"></i> നിങ്ങൾ വിജയിച്ചു!</h3>
             <p style="font-size:13px; color:#555; margin:0;">അറബിക് അക്ഷരങ്ങൾ എഴുതുന്നത് ശ്രദ്ധിക്കൂ:</p>
             <div class="hw-canvas-container" id="canvasArea">
-                <svg id="hwShowBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+                <svg id="hwShowBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"></svg>
                 <img id="movingHand" src="hand.png" alt="Hand Drawing">
             </div>
             <button class="start-btn" style="background:#2ecc71; color:white; margin:0;" onclick="closeHwModalAndContinue()">അടുത്ത വാക്ക് <i class="fa-solid fa-arrow-right"></i></button>
@@ -271,6 +271,24 @@
         });
     }
 
+    // സൗണ്ട് ബുക്ക് ആപ്പിലെ അതേ അക്യുറേറ്റ് പൊസിഷനിംഗ് മാട്രിക്സ് സിസ്റ്റം
+    function moveHandToSvgPoint(svgX, svgY, svgElem, containerElem, handElem) {
+        let pt = svgElem.createSVGPoint();
+        pt.x = svgX; pt.y = svgY;
+        
+        let globalMatrix = svgElem.getScreenCTM();
+        if (!globalMatrix) return;
+        
+        let screenPt = pt.matrixTransform(globalMatrix);
+        let containerRect = containerElem.getBoundingClientRect();
+
+        let localX = screenPt.x - containerRect.left;
+        let localY = screenPt.y - containerRect.top;
+
+        handElem.style.left = localX + 'px';
+        handElem.style.top = localY + 'px';
+    }
+
     function startHandwritingAnimation(allPaths) {
         let board = document.getElementById("hwShowBoard");
         let hand = document.getElementById("movingHand");
@@ -284,26 +302,39 @@
         let currentPointIndex = 0;
         let activePathsData = [];
 
-        // ============================================================
-        // പ്രധാനപ്പെട്ട സെറ്റിംഗ്സ്: കൈയുടെ സ്ഥാനം മാറ്റാൻ ഇത് മാത്രം തിരുത്തുക
-        // ============================================================
-        // ചുവന്ന വരയിൽ നിന്നും കൈ ഒരുപാട് ഇടത്തോട്ട് മാറിയാൽ 'handCorrectionX' കൂട്ടുക.
-        // ചുവന്ന വരയിൽ നിന്നും കൈ ഒരുപാട് താഴോട്ട് മാറിയാൽ 'handCorrectionY' കുറയ്ക്കുക.
-        let handCorrectionX = 0;   // ആവശ്യമെങ്കിൽ മാറ്റുക (ഉദാഹരണത്തിന്: 10, -20, etc.)
-        let handCorrectionY = 0;   // ആവശ്യമെങ്കിൽ മാറ്റുക (ഉദാഹരണത്തിന്: 15, -10, etc.)
-        // ============================================================
+        // അനിമേഷൻ ബോക്സിന്റെ വ്യൂ ക്രമീകരിക്കുന്നു
+        let minX = 1000, minY = 1000, maxX = 0, maxY = 0;
+        let hasPoints = false;
+        allPaths.forEach(path => {
+            path.forEach(pt => {
+                if(pt.x < minX) minX = pt.x;
+                if(pt.y < minY) minY = pt.y;
+                if(pt.x > maxX) maxX = pt.x;
+                if(pt.y > maxY) maxY = pt.y;
+                hasPoints = true;
+            });
+        });
+
+        if (hasPoints) {
+            let padding = 80;
+            let width = (maxX - minX) + (padding * 2);
+            let height = (maxY - minY) + (padding * 2);
+            board.setAttribute("viewBox", `${minX - padding} ${minY - padding} ${width} ${height}`);
+        } else {
+            board.setAttribute("viewBox", "0 0 1000 1000");
+        }
 
         allPaths.forEach(() => {
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
             p.setAttribute("stroke", "#e74c3c"); 
-            p.setAttribute("stroke-width", "8"); 
+            p.setAttribute("stroke-width", "10"); 
             p.setAttribute("fill", "none");
             p.setAttribute("stroke-linecap", "round");
             p.setAttribute("stroke-linejoin", "round");
             g.appendChild(p);
             board.appendChild(g);
-            activePathsData.push(p);
+            activePathsData.push(p); 
         });
 
         function drawStep() {
@@ -315,14 +346,8 @@
             let path = allPaths[currentPathIndex];
             let pt = path[currentPointIndex];
 
-            let rect = container.getBoundingClientRect();
-            
-            // കോർഡിനേറ്റ്സ് സ്ക്രീൻ സൈസിന് അനുസരിച്ച് തുല്യമാക്കുന്നു
-            let realX = (pt.x / 1000) * rect.width + handCorrectionX;
-            let realY = (pt.y / 1000) * rect.height + handCorrectionY;
-            
-            hand.style.left = `${realX}px`;
-            hand.style.top = `${realY}px`;
+            // മാട്രിക്സ് സിസ്റ്റം വഴി കൈ കൃത്യമായി വരയ്ക്കുന്ന പോയിന്റിലേക്ക് മാറ്റുന്നു
+            moveHandToSvgPoint(pt.x, pt.y, board, container, hand);
 
             let dStr = `M ${path[0].x} ${path[0].y}`;
             for (let i = 1; i <= currentPointIndex; i++) {
@@ -341,13 +366,12 @@
             }
         }
 
+        // ആദ്യ പോയിന്റിലേക്ക് കൈ സെറ്റ് ചെയ്യുന്നു
         let firstPt = allPaths[0][0];
-        let rect = container.getBoundingClientRect();
-        
-        hand.style.left = `${(firstPt.x / 1000) * rect.width + handCorrectionX}px`;
-        hand.style.top = `${(firstPt.y / 1000) * rect.height + handCorrectionY}px`;
-
-        setTimeout(() => { requestAnimationFrame(drawStep); }, 200);
+        setTimeout(() => {
+            moveHandToSvgPoint(firstPt.x, firstPt.y, board, container, hand);
+            requestAnimationFrame(drawStep);
+        }, 100);
     }
 
     function closeHwModalAndContinue() {
