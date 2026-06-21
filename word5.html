@@ -113,15 +113,19 @@
     let currentPoints = 1000;
     let scoreTimer = null;
 
-    // ഡെയ്‌ലി റീസെറ്റ് ഫങ്ക്ഷൻ
+    // ദിവസേന പഴയ ഡാറ്റ ക്ലിയർ ചെയ്യാനുള്ള ഫങ്ക്ഷൻ (എല്ലാ കളിക്കാരുടെയും)
     function checkDailyReset() {
         let today = new Date().toDateString();
         let lastPlayedDate = localStorage.getItem("last_played_date");
         if (lastPlayedDate !== today) {
             localStorage.setItem("last_played_date", today);
-            localStorage.removeItem("saved_wrong_count");
-            localStorage.removeItem("saved_points");
-            localStorage.removeItem("saved_word_index");
+            // ലോക്കൽ സ്റ്റോറേജ് പൂർണ്ണമായും ക്ലിയർ ചെയ്യുന്നു
+            let keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if(key.startsWith("saved_")) {
+                    localStorage.removeItem(key);
+                }
+            });
         }
     }
 
@@ -142,22 +146,6 @@
                 select.appendChild(opt);
             });
         }
-        
-        // റീലോഡിന് ശേഷം സെഷൻ ഉണ്ടെങ്കിൽ ഓട്ടോമാറ്റിക് ആയി ഗെയിമിലേക്ക് കടക്കുന്നു
-        if(localStorage.getItem("active_player")) {
-            playerName = localStorage.getItem("active_player");
-            selectedMadrasaName = localStorage.getItem("active_madrassa");
-            currentWordIndex = parseInt(localStorage.getItem("saved_word_index") || "0");
-            totalWrongCount = parseInt(localStorage.getItem("saved_wrong_count") || "0");
-            currentPoints = parseInt(localStorage.getItem("saved_points") || "1000");
-
-            document.getElementById("setupBox").style.display = "none";
-            document.getElementById("gameZone").style.display = "block";
-            document.getElementById("liveScore").textContent = currentPoints;
-            
-            startPointTimer();
-            loadWordLevel();
-        }
     })
     .catch(err => alert("ഡാറ്റ ഫയലുകൾ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല!"));
 
@@ -177,17 +165,25 @@
     function startGame() {
         playerName = document.getElementById("studentSelect").value;
         if(playerName) {
-            // പുതിയ ഗെയിം സെഷൻ ഡാറ്റ സെറ്റ് ചെയ്യുന്നു
-            localStorage.setItem("active_player", playerName);
-            localStorage.setItem("active_madrassa", selectedMadrasaName);
-            
-            currentWordIndex = 0;
-            totalWrongCount = 0;
-            currentPoints = 1000;
-            
-            localStorage.setItem("saved_word_index", currentWordIndex);
-            localStorage.setItem("saved_wrong_count", totalWrongCount);
-            localStorage.setItem("saved_points", currentPoints);
+            // ഈ പ്രത്യേക കുട്ടിയുടെ ഡാറ്റ നേരത്തെ സ്റ്റോർ ചെയ്തിട്ടുണ്ടോ എന്ന് നോക്കുന്നു
+            let userWrongKey = "saved_wrong_count_" + playerName;
+            let userPointsKey = "saved_points_" + playerName;
+            let userLevelKey = "saved_word_index_" + playerName;
+
+            if(localStorage.getItem(userWrongKey)) {
+                totalWrongCount = parseInt(localStorage.getItem(userWrongKey));
+                currentPoints = parseInt(localStorage.getItem(userPointsKey));
+                currentWordIndex = parseInt(localStorage.getItem(userLevelKey));
+            } else {
+                // പുതിയ കളിക്കാരനാണെങ്കിൽ പുതിയ തുടക്കം
+                currentWordIndex = 0;
+                totalWrongCount = 0;
+                currentPoints = 1000;
+                
+                localStorage.setItem(userLevelKey, currentWordIndex);
+                localStorage.setItem(userWrongKey, totalWrongCount);
+                localStorage.setItem(userPointsKey, currentPoints);
+            }
 
             document.getElementById("setupBox").style.display = "none";
             document.getElementById("gameZone").style.display = "block";
@@ -204,7 +200,7 @@
             if(currentPoints > 0) {
                 currentPoints--;
                 document.getElementById("liveScore").textContent = currentPoints;
-                localStorage.setItem("saved_points", currentPoints); // ഓരോ സെക്കന്റിലും സ്കോർ സേവ് ചെയ്യുന്നു
+                localStorage.setItem("saved_points_" + playerName, currentPoints); // കുട്ടിയുടെ പേരിൽ സ്കോർ സേവ് ചെയ്യുന്നു
             }
         }, 1000);
     }
@@ -248,21 +244,21 @@
                         }, 400);
                     }
                 } else {
-                    // തെറ്റുകൾ കണക്കാക്കി ലോക്കൽ സ്റ്റോറേജിലേക്ക് മാറ്റുന്നു
+                    // ഈ കുട്ടിയുടെ തെറ്റുകളുടെ എണ്ണം കൂട്ടുന്നു
                     totalWrongCount++;
-                    localStorage.setItem("saved_wrong_count", totalWrongCount);
+                    localStorage.setItem("saved_wrong_count_" + playerName, totalWrongCount);
 
-                    // തെറ്റുമ്പോൾ പത്ത് പോയിന്റ് വീതം കുറയ്ക്കുന്നു
+                    // ഈ കുട്ടിയുടെ പോയിന്റ് കുറയ്ക്കുന്നു
                     currentPoints = Math.max(0, currentPoints - 10);
-                    localStorage.setItem("saved_points", currentPoints);
+                    localStorage.setItem("saved_points_" + playerName, currentPoints);
                     document.getElementById("liveScore").textContent = currentPoints;
 
                     b.classList.add("wrong");
                     
                     setTimeout(() => { 
-                        alert("തെറ്റായിപ്പോയി! ലോഗിൻ പേജിലേക്ക് മടങ്ങുന്നു, വീണ്ടും ആദ്യം മുതൽ ശ്രമിക്കുക.");
+                        alert("തെറ്റായിപ്പോയി! ലോഗിൻ പേജിലേക്ക് മടങ്ങുന്നു, വീണ്ടും ലോഗിൻ ചെയ്ത് ശ്രമിക്കുക.");
                         clearInterval(scoreTimer);
-                        location.reload(); // പേജ് റീലോഡ് ആയാലും ലോക്കൽ സ്റ്റോറേജ് വഴി തെറ്റുകളുടെ എണ്ണം ഓർത്തു വെക്കും
+                        location.reload(); 
                     }, 200);
                 }
             };
@@ -344,7 +340,7 @@
     function closeHwModalAndContinue() {
         document.getElementById("hwModal").style.display = "none";
         currentWordIndex++;
-        localStorage.setItem("saved_word_index", currentWordIndex); // അടുത്ത വാക്കിന്റെ ഇൻഡക്സ് സേവ് ചെയ്യുന്നു
+        localStorage.setItem("saved_word_index_" + playerName, currentWordIndex); // കുട്ടിയുടെ ഇൻഡക്സ് സേവ് ചെയ്യുന്നു
         
         if(currentWordIndex < appData.words.length) {
             loadWordLevel();
@@ -387,12 +383,10 @@
     }
 
     function resetGameSession() {
-        // വീണ്ടും കളിക്കാൻ ക്ലിക്ക് ചെയ്യുമ്പോൾ നിലവിലെ സെഷൻ ക്ലിയർ ചെയ്യുന്നു
-        localStorage.removeItem("active_player");
-        localStorage.removeItem("active_madrassa");
-        localStorage.removeItem("saved_word_index");
-        localStorage.removeItem("saved_wrong_count");
-        localStorage.removeItem("saved_points");
+        // ഒരു കുട്ടി കളി പൂർത്തിയാക്കി വീണ്ടും കളിക്കാൻ ക്ലിക്ക് ചെയ്യുമ്പോൾ അവന്റെ ഡാറ്റ മാത്രം ക്ലിയർ ചെയ്യുന്നു
+        localStorage.removeItem("saved_word_index_" + playerName);
+        localStorage.removeItem("saved_wrong_count_" + playerName);
+        localStorage.removeItem("saved_points_" + playerName);
         location.reload();
     }
 
