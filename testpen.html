@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Position Value Tester</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1e293b; color: white; padding: 20px; text-align: center; }
+        .wrapper { max-width: 500px; margin: 0 auto; background: #0f172a; padding: 20px; border-radius: 16px; border: 2px solid #10b981; }
+        
+        /* അനിമേഷൻ ബോക്സ് */
+        .canvas-container { background: #ffffff; width: 100%; height: 260px; position: relative; border-radius: 8px; margin: 20px 0; overflow: hidden; }
+        #testBoard { width: 100%; height: 100%; display: block; }
+        
+        /* ടെസ്റ്റ് ചെയ്യേണ്ട കൈ */
+        #testHand { 
+            position: absolute; 
+            width: 85px; 
+            height: auto; 
+            pointer-events: none; 
+            z-index: 10;
+            transform: translate(-23px, -48px); /* തുടക്ക വാല്യൂ */
+        }
+
+        /* ഇൻപുട്ട് ബോക്സുകൾ */
+        .input-panel { background: #1e293b; padding: 15px; border-radius: 10px; text-align: left; }
+        .input-group { margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
+        label { font-weight: bold; color: #94a3b8; }
+        input[type="number"] { width: 100px; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; text-align: center; }
+        
+        .result-box { background: #020617; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #4ade80; border: 1px dashed #22c55e; margin-top: 15px; text-align: center; }
+        .btn-update { background: #10b981; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-update:hover { background: #059669; }
+    </style>
+</head>
+<body>
+
+    <h2>✏️ പേനയുടെ വാല്യൂ ടെസ്റ്റിംഗ് ടൂൾ</h2>
+    <p style="color: #94a3b8; font-size: 14px;">നിങ്ങൾ ഉദ്ദേശിക്കുന്ന നമ്പറുകൾ ടൈപ്പ് ചെയ്ത് 'ചേഞ്ച് ചെയ്യുക' ബട്ടൺ അടിക്കുക</p>
+
+    <div class="wrapper">
+        <div class="canvas-container" id="canvasArea">
+            <svg id="testBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+                <path d="M 100 300 Q 200 100 300 200" fill="none" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round"/>
+                <circle cx="300" cy="200" r="8" fill="#22c55e"/> 
+            </svg>
+            <img id="testHand" src="hand.png" alt="Hand">
+        </div>
+
+        <div class="input-panel">
+            <div class="input-group">
+                <label>X-Axis വാല്യൂ (ഇടത് / വലത്):</label>
+                <div>
+                    <input type="number" id="inputX" value="-23"> <b>px</b>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Y-Axis വാല്യൂ (മുകളിൽ / താഴെ):</label>
+                <div>
+                    <input type="number" id="inputY" value="-48"> <b>px</b>
+                </div>
+            </div>
+
+            <button class="btn-update" onclick="applyCustomValues()">🔄 വാല്യൂ ചേഞ്ച് ചെയ്യുക</button>
+
+            <div style="margin-top: 15px; font-size: 13px; color: #94a3b8;">മെയിൻ കോഡിൽ പേസ്റ്റ് ചെയ്യേണ്ട വരി:</div>
+            <div class="result-box" id="cssResult">
+                transform: translate(-23px, -48px);
+            </div>
+        </div>
+    </div>
+
+<script>
+    // പച്ച കുത്തിന്റെ പൊസിഷൻ
+    const targetPoint = { x: 300, y: 200 };
+
+    function moveHandToSvgPoint(svgX, svgY, svgElem, containerElem, handElem) {
+        let pt = svgElem.createSVGPoint();
+        pt.x = svgX; pt.y = svgY;
+        
+        let globalMatrix = svgElem.getScreenCTM();
+        if (!globalMatrix) return;
+        
+        let screenPt = pt.matrixTransform(globalMatrix);
+        let containerRect = containerElem.getBoundingClientRect();
+
+        handElem.style.left = (screenPt.x - containerRect.left) + 'px';
+        handElem.style.top = (screenPt.y - containerRect.top) + 'px';
+    }
+
+    function applyCustomValues() {
+        let xValue = document.getElementById("inputX").value;
+        let yValue = document.getElementById("inputY").value;
+        
+        // കൈയുടെ ചിത്രത്തിലേക്ക് നിങ്ങൾ ടൈപ്പ് ചെയ്ത വാല്യൂ നൽകുന്നു
+        let hand = document.getElementById("testHand");
+        hand.style.transform = `translate(${xValue}px, ${yValue}px)`;
+        
+        // താഴെ കോപ്പി ചെയ്യാനുള്ള കോഡ് കാണിക്കുന്നു
+        document.getElementById("cssResult").innerText = `transform: translate(${xValue}px, ${yValue}px);`;
+
+        // കൈയെ പച്ച കുത്തിന് മുകളിലേക്ക് മാറ്റി നിർത്തുന്നു
+        let board = document.getElementById("testBoard");
+        let container = document.getElementById("canvasArea");
+        moveHandToSvgPoint(targetPoint.x, targetPoint.y, board, container, hand);
+    }
+
+    // പേജ് ലോഡാകുമ്പോൾ ആദ്യ വാല്യൂ സെറ്റ് ചെയ്യുന്നു
+    window.onload = () => {
+        setTimeout(applyCustomValues, 300);
+    };
+</script>
+</body>
+</html>
