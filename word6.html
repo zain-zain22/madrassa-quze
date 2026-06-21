@@ -30,13 +30,13 @@
         
         #movingHand { 
             position: absolute; 
-            width: 80px; 
+            width: 85px; /* നിങ്ങൾ ഉദ്ദേശിച്ച വലിപ്പത്തിലേക്ക് സെറ്റ് ചെയ്തത് */
             height: auto; 
             pointer-events: none; 
             z-index: 10; 
             display: none; 
-            /* പേനയുടെ/കൈയുടെ തുമ്പ് ലൈനിലേക്ക് കറക്റ്റ് ചെയ്യാൻ ഉള്ള ട്യൂണിങ് */
-            transform: translate(-20px, -45px); 
+            /* 👇 ഇവിടുത്തെ -23px, -48px നിങ്ങളുടെ പേനയുടെ തുമ്പിനനുസരിച്ച് മാറ്റാം */
+            transform: translate(-23px, -48px); 
             transition: transform 0.05s linear; 
         }
 
@@ -110,7 +110,7 @@
         <a href="https://zain-zain22.github.io/madrassa-quze/practice4.html" class="start-btn" style="background:#10b981; color:white; margin-top:10px;">
             📝 ക്വിസ് പ്രാക്ടീസ് ചെയ്യുക
         </a>
-    </div>
+        </div>
 </div>
 
 <script>
@@ -125,6 +125,7 @@
     
     let currentPoints = 1000;
     let scoreTimer = null;
+    let hwIntervalsMemory = []; // ആനിമേഷൻ ടൈമർ സൂക്ഷിക്കാൻ
 
     function checkDailyReset() {
         let today = new Date().toDateString();
@@ -271,7 +272,7 @@
         });
     }
 
-    // സൗണ്ട് ബുക്ക് ആപ്പിലെ അതേ അക്യുറേറ്റ് പൊസിഷനിംഗ് മാട്രിക്സ് സിസ്റ്റം
+    // കൃത്യമായ പൊസിഷനിംഗ് ഫങ്ഷൻ
     function moveHandToSvgPoint(svgX, svgY, svgElem, containerElem, handElem) {
         let pt = svgElem.createSVGPoint();
         pt.x = svgX; pt.y = svgY;
@@ -289,6 +290,7 @@
         handElem.style.top = localY + 'px';
     }
 
+    // നിങ്ങളുടെ പുതിയ ലൂപ്പ് ഐഡിയ കൂടി ചേർത്തുള്ള അനിമേഷൻ
     function startHandwritingAnimation(allPaths) {
         let board = document.getElementById("hwShowBoard");
         let hand = document.getElementById("movingHand");
@@ -298,11 +300,10 @@
         hand.style.display = "block";
         document.getElementById("hwModal").style.display = "flex";
 
-        let currentPathIndex = 0;
-        let currentPointIndex = 0;
-        let activePathsData = [];
+        // പഴയ ഇൻറർവെലുകൾ ഉണ്ടെങ്കിൽ ക്ലിയർ ചെയ്യുന്നു
+        hwIntervalsMemory.forEach(clearInterval);
+        hwIntervalsMemory = [];
 
-        // അനിമേഷൻ ബോക്സിന്റെ വ്യൂ ക്രമീകരിക്കുന്നു
         let minX = 1000, minY = 1000, maxX = 0, maxY = 0;
         let hasPoints = false;
         allPaths.forEach(path => {
@@ -324,54 +325,65 @@
             board.setAttribute("viewBox", "0 0 1000 1000");
         }
 
-        allPaths.forEach(() => {
+        let currentPathIndex = 0;
+        let globalDelay = 100;
+
+        function animateSingleStroke(pathPoints) {
+            if(!pathPoints || pathPoints.length === 0) return;
+            
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            p.setAttribute("stroke", "#e74c3c"); 
-            p.setAttribute("stroke-width", "10"); 
-            p.setAttribute("fill", "none");
-            p.setAttribute("stroke-linecap", "round");
-            p.setAttribute("stroke-linejoin", "round");
-            g.appendChild(p);
+            let pathsList = [];
+            
+            // നിങ്ങൾ നൽകിയ 12 ലെയർ മഷി ഒഴുക്ക് ഐഡിയ (Nib effect)
+            for(let i=0; i<12; i++) {
+                let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                p.setAttribute("transform", `translate(${(i-6)*0.3}, ${-(i-6)*0.3})`);
+                p.setAttribute("stroke", "#e74c3c"); // ചുവന്ന മഷി
+                p.setAttribute("stroke-width", "2.5");
+                p.setAttribute("fill", "none"); 
+                p.setAttribute("stroke-linecap", "round");
+                p.setAttribute("d", `M ${pathPoints[0].x} ${pathPoints[0].y}`);
+                g.appendChild(p); 
+                pathsList.push(p);
+            }
             board.appendChild(g);
-            activePathsData.push(p); 
-        });
 
-        function drawStep() {
-            if (currentPathIndex >= allPaths.length) {
-                setTimeout(() => { hand.style.display = "none"; }, 300);
-                return;
-            }
-
-            let path = allPaths[currentPathIndex];
-            let pt = path[currentPointIndex];
-
-            // മാട്രിക്സ് സിസ്റ്റം വഴി കൈ കൃത്യമായി വരയ്ക്കുന്ന പോയിന്റിലേക്ക് മാറ്റുന്നു
-            moveHandToSvgPoint(pt.x, pt.y, board, container, hand);
-
-            let dStr = `M ${path[0].x} ${path[0].y}`;
-            for (let i = 1; i <= currentPointIndex; i++) {
-                dStr += ` L ${path[i].x} ${path[i].y}`;
-            }
-
-            activePathsData[currentPathIndex].setAttribute("d", dStr);
-            currentPointIndex += 2; 
-
-            if (currentPointIndex >= path.length) {
-                currentPathIndex++;
-                currentPointIndex = 0;
-                setTimeout(() => { requestAnimationFrame(drawStep); }, 150);
-            } else {
-                requestAnimationFrame(drawStep);
-            }
+            let ptIdx = 1;
+            // സ്പീഡ് ഓട്ടോമാറ്റിക് ആയി അഡ്ജസ്റ്റ് ചെയ്യുന്നു
+            let speed = Math.max(8, Math.min(25, Math.floor(1000 / pathPoints.length)));
+            
+            let strokeTimer = setTimeout(() => {
+                // കൈ തുടക്കത്തിലേക്ക് മാറ്റുന്നു
+                moveHandToSvgPoint(pathPoints[0].x, pathPoints[0].y, board, container, hand);
+                
+                let interval = setInterval(() => {
+                    if(ptIdx >= pathPoints.length) {
+                        clearInterval(interval);
+                        currentPathIndex++;
+                        if(currentPathIndex < allPaths.length) {
+                            animateSingleStroke(allPaths[currentPathIndex]);
+                        } else {
+                            // അനിമേഷൻ കഴിഞ്ഞാൽ കൈ അപ്രത്യക്ഷമാകും
+                            setTimeout(() => { hand.style.display = "none"; }, 300);
+                        }
+                        return;
+                    }
+                    
+                    let currPt = pathPoints[ptIdx];
+                    let dString = ` L ${currPt.x} ${currPt.y}`;
+                    pathsList.forEach(p => p.setAttribute("d", p.getAttribute("d") + dString));
+                    
+                    // മാട്രിക്സ് സിസ്റ്റം വഴി കൈ നീക്കുന്നു
+                    moveHandToSvgPoint(currPt.x, currPt.y, board, container, hand);
+                    ptIdx++;
+                }, speed);
+                
+                hwIntervalsMemory.push(interval);
+            }, globalDelay);
         }
 
-        // ആദ്യ പോയിന്റിലേക്ക് കൈ സെറ്റ് ചെയ്യുന്നു
-        let firstPt = allPaths[0][0];
-        setTimeout(() => {
-            moveHandToSvgPoint(firstPt.x, firstPt.y, board, container, hand);
-            requestAnimationFrame(drawStep);
-        }, 100);
+        // ആദ്യ സ്ട്രോക്ക് തുടങ്ങുന്നു
+        animateSingleStroke(allPaths[0]);
     }
 
     function closeHwModalAndContinue() {
