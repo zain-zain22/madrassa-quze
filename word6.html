@@ -328,18 +328,20 @@
         let currentPathIndex = 0;
         let globalDelay = 100;
 
-        function animateSingleStroke(pathPoints) {
+                function animateSingleStroke(pathPoints) {
             if(!pathPoints || pathPoints.length === 0) return;
             
             let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             let pathsList = [];
             
-            // നിങ്ങൾ നൽകിയ 12 ലെയർ മഷി ഒഴുക്ക് ഐഡിയ (Nib effect)
+            // 🛑 ഈ കാണുന്ന ലൂപ്പ് (For Loop) മുഴുവനായി മാറ്റുക 🛑
             for(let i=0; i<12; i++) {
                 let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                p.setAttribute("transform", `translate(${(i-6)*0.3}, ${-(i-6)*0.3})`);
-                p.setAttribute("stroke", "#e74c3c"); // ചുവന്ന മഷി
-                p.setAttribute("stroke-width", "2.5");
+                
+                // ഈ വരി മാറ്റി പുതിയ കാലിഗ്രാഫി വരി കൊടുക്കുക 👇
+                p.setAttribute("transform", `translate(${(i-6)*0.6}, ${-(i-6)*0.1})`);
+                p.setAttribute("stroke", "#e74c3c"); 
+                p.setAttribute("stroke-width", "2");  // കട്ടി 2 ആക്കി കുറയ്ക്കുക
                 p.setAttribute("fill", "none"); 
                 p.setAttribute("stroke-linecap", "round");
                 p.setAttribute("d", `M ${pathPoints[0].x} ${pathPoints[0].y}`);
@@ -347,6 +349,7 @@
                 pathsList.push(p);
             }
             board.appendChild(g);
+
 
             let ptIdx = 1;
             // സ്പീഡ് ഓട്ടോമാറ്റിക് ആയി അഡ്ജസ്റ്റ് ചെയ്യുന്നു
