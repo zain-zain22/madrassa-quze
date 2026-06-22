@@ -114,7 +114,26 @@ audio { margin-top: 5px; display: none; width: 100%; }
 <div class="section" style="background: #fff3e0; border-color: #ffe0b2;"> 
 <h4>📚 നിലവിലുള്ള പേജ് ലിസ്റ്റ്:</h4> 
 <div id="existingPagesList" style="max-height: 250px; overflow-y: auto; background: #fff; padding: 5px; border-radius: 4px; border: 1px solid #ffcc80;"></div> 
-</div> 
+</div>
+    <div class="admin-box" style="border-top:4px solid #3498db;">
+
+<h2>📄 കുട്ടികളുടെ വർക്ക് PDF</h2>
+
+<div class="section">
+
+<label>PDF ഫയൽ തിരഞ്ഞെടുക്കുക:</label>
+
+<input type="file" id="workPdfUpload" accept="application/pdf">
+
+<button class="btn-blue" onclick="saveWorkPDF()">
+📤 PDF അപ്‌ലോഡ് ചെയ്യുക
+</button>
+
+<p id="pdfStatus" style="text-align:center;color:#27ae60;"></p>
+
+</div>
+
+</div>
 <div class="section"> 
 <h4>🆕 പുതിയ പേജ് ചേർക്കുക / പേജ് തിരുത്തുക:</h4> 
 <input type="file" id="imageUploader" accept="image/*"> 
@@ -290,7 +309,8 @@ let quizMemory = [];
 let liveWordsMemory = []; 
 let readingPracticeMemory = []; 
 let pointsMemory = []; // 📌 പോയിന്റുകൾ സൂക്ഷിക്കാനുള്ള മെമ്മറി
-
+let workPDFFile = null;
+let workPDFUrl = "";
 let currentZones = []; 
 let currentAudioBlobs = []; 
 let selectedImageFile = null; 
@@ -335,7 +355,12 @@ function convertMalayalamToArbi(text){
   }
   return result;
 }
+document.getElementById('workPdfUpload')
+.addEventListener('change',function(e){
 
+workPDFFile = e.target.files[0];
+
+});
 window.onload = function() { 
 if(localStorage.getItem('gh_token')) { 
 document.getElementById('ghToken').value = localStorage.getItem('gh_token'); 
@@ -363,7 +388,53 @@ function saveTokenToLocal() {
 let tok = document.getElementById('ghToken').value.trim(); 
 localStorage.setItem('gh_token', tok); 
 } 
+async function saveWorkPDF(){
 
+let token=document.getElementById('ghToken').value.trim();
+
+if(!token)
+return alert("GitHub Token നൽകുക");
+
+if(!workPDFFile)
+return alert("PDF തിരഞ്ഞെടുക്കുക");
+
+
+let fileName =
+"work_pdf_"+Date.now()+".pdf";
+
+
+await uploadToGitHubAPI(
+"data/"+fileName,
+workPDFFile,
+token
+);
+
+
+workPDFUrl="data/"+fileName;
+
+
+let pdfData={
+pdf:workPDFUrl
+};
+
+
+let blob=new Blob(
+[JSON.stringify(pdfData,null,2)],
+{type:"application/json"}
+);
+
+
+await uploadToGitHubAPI(
+"data/work_pdf.json",
+blob,
+token
+);
+
+
+document.getElementById("pdfStatus").innerHTML=
+"✅ PDF വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു";
+
+    }
 async function loadOldDataFromGitHub() { 
 document.getElementById('loadingOverlay').style.display = 'flex'; 
 try { 
